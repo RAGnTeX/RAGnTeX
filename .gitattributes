@@ -1,0 +1,4 @@
+gfx/*.png filter=lfs diff=lfs merge=lfs -text
+gfx/icon_logo.png filter=lfs diff=lfs merge=lfs -text
+gfx/long_logo.png filter=lfs diff=lfs merge=lfs -text
+gfx/github-mark-white.png filter=lfs diff=lfs merge=lfs -text
