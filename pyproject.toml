@@ -1,0 +1,25 @@
+[project]
+name = "ragntex"
+version = "1.0.0"
+description = "From Text to Visuals: Auto-Generating LaTeX Beamer Presentations with GenAI"
+authors = [
+    {name = "AnnaErsh",email = "aershova096@gmail.com"}
+]
+license = {text = "Apache 2.0"}
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "google-genai (==1.11.0)",
+    "chromadb (==1.0.5)",
+    "dotenv (>=0.9.9,<0.10.0)",
+    "google-api-core (>=2.24.2,<3.0.0)",
+    "google-api-python-client (>=2.168.0,<3.0.0)",
+    "google (>=3.0.0,<4.0.0)",
+    "rtree (>=1.4.0,<2.0.0)",
+    "pymupdf (>=1.25.5,<2.0.0)",
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
