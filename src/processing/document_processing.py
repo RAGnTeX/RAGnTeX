@@ -3,7 +3,7 @@ import fitz
 import os
 import hashlib
 
-from src.images_processing import extract_images, extract_vector
+from .images_processing import extract_images, extract_vector
 
 
 def extract_pdf_content(pdf_path: str):

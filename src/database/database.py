@@ -4,7 +4,7 @@ from google import genai
 from chromadb import Documents, EmbeddingFunction, Embeddings
 import chromadb
 
-from src.google_client import client
+from ..services import client
 
 # Define a helper to retry when per-minute quota is reached.
 is_retriable = lambda e: (isinstance(e, genai.errors.APIError) and e.code in {429, 503})
