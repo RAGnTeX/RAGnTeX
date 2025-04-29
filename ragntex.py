@@ -3,12 +3,23 @@ import re
 from datetime import datetime
 from dotenv import load_dotenv
 
-from src.database import db, embed_fn
-from src.document_processing import process_documents
-from src.images_processing import save_pdf_images, save_pdf_figures
-from src.latex_compilation import CompilePresentation
-from src.prompt import prompt
-from src.google_client import client
+# from src.database import db, embed_fn
+# from src.document_processing import process_documents
+# from src.images_processing import save_pdf_images, save_pdf_figures
+# from src.latex_compilation import CompilePresentation
+# from src.prompt import prompt
+# from src.google_client import client
+
+from src import (
+    db,
+    embed_fn,
+    process_documents,
+    save_pdf_images,
+    save_pdf_figures,
+    prompt,
+    CompilePresentation,
+    client,
+)
 
 
 load_dotenv()
@@ -61,7 +72,7 @@ for passage, metas in zip(documents, metadatas):
     prompt += f"IMAGES: {images_passage}\n"
 
 # Create a new subfolder
-print("Creating new subfolder...")
+print("💾Creating new subfolder...")
 base_path = MAIN_DIR + "output/"
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 work_dir = os.path.join(base_path, timestamp)
@@ -71,7 +82,7 @@ print(f"📁 Created folder: {work_dir}")
 # Generate the presentation code
 model_name = "gemini-2.0-flash"
 # model_name = "gemini-2.5-flash-preview-04-17"
-print("Generating response...")
+print("⭐️Generating response...")
 answer = client.models.generate_content(model=model_name, contents=prompt)
 print(f"🎲 Generated the response using: {model_name}")
 
