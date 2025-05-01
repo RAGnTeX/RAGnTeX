@@ -1,6 +1,6 @@
 import os
 import subprocess
-from ..logging_utils import Logger
+from ..utils import Logger
 
 LOGGER = Logger.get_logger()
 
@@ -44,11 +44,10 @@ def CompilePresentation(latex_code, work_dir):
 
     except subprocess.CalledProcessError as e:
         # Handle error in case of failed LaTeX compilation
-        LOGGER.info("❌ PDF generation failed. Here's the log:")
-        LOGGER.info(e.stderr.decode())
+        LOGGER.error("❌ PDF generation failed. Here's the log: %s", e.stderr.decode())
     else:
         # Check for PDF output
         if not os.path.exists("presentation.pdf"):
-            LOGGER.info("❌ PDF generation failed. No PDF file found.")
+            LOGGER.error("❌ PDF generation failed. No PDF file found.")
         else:
-            LOGGER.info(f"💾 PDF generated successfully in: {work_dir}")
+            LOGGER.info("💾 PDF generated successfully in: %s", work_dir)

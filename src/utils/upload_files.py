@@ -17,7 +17,7 @@ def upload_files(files):
         # Temporary path where Gradio stores the file
         temp_path = file.name
         file_name = Path(file.name).name
-        LOGGER.info(f"Uploading file: {file_name}")
+        LOGGER.info("Uploading file: %s", file_name)
 
         # Define where you want to save the file
         filepath = UPLOAD_DIR / file_name
