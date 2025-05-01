@@ -1,5 +1,8 @@
 import os
 import subprocess
+from ..logging_utils import Logger
+
+LOGGER = Logger.get_logger()
 
 
 def CompilePresentation(latex_code, work_dir):
@@ -14,12 +17,12 @@ def CompilePresentation(latex_code, work_dir):
     with open(tex_file, "w") as f:
         f.write(latex_code)
 
-    print("=" * 100)
-    print("📄 Files in the directory:")
+    LOGGER.info("=" * 100)
+    LOGGER.info("📄 Files in the directory:")
 
     # List files in the directory using Python (instead of `!ls`)
     for file in os.listdir(work_dir):
-        print(file)
+        LOGGER.info(file)
 
     # Compile with pdflatex (using subprocess instead of `!`)
     os.chdir(work_dir)  # Change working directory
@@ -41,11 +44,11 @@ def CompilePresentation(latex_code, work_dir):
 
     except subprocess.CalledProcessError as e:
         # Handle error in case of failed LaTeX compilation
-        print("❌ PDF generation failed. Here's the log:")
-        print(e.stderr.decode())
+        LOGGER.info("❌ PDF generation failed. Here's the log:")
+        LOGGER.info(e.stderr.decode())
     else:
         # Check for PDF output
         if not os.path.exists("presentation.pdf"):
-            print("❌ PDF generation failed. No PDF file found.")
+            LOGGER.info("❌ PDF generation failed. No PDF file found.")
         else:
-            print(f"💾 PDF generated successfully in: {work_dir}")
+            LOGGER.info(f"💾 PDF generated successfully in: {work_dir}")
