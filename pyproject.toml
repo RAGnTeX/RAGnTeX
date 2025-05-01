@@ -3,7 +3,8 @@ name = "ragntex"
 version = "1.0.0"
 description = "From Text to Visuals: Auto-Generating LaTeX Beamer Presentations with GenAI"
 authors = [
-    {name = "AnnaErsh",email = "aershova096@gmail.com"}
+    {name = "AnnaErsh",email = "aershova096@gmail.com"},
+    {name = "KNiewczas",email = "kajetan.niewczas@gmail.com"}
 ]
 license = {text = "Apache 2.0"}
 readme = "README.md"
