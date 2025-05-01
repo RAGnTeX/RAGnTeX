@@ -19,9 +19,13 @@ from src import (
     prompt,
     CompilePresentation,
     client,
+    demo,
+    Logger,
 )
 
+LOGGER = Logger.get_logger()
 
+demo.launch()
 load_dotenv()
 load_dotenv("../.env")
 MAIN_DIR = os.getenv("MAIN_DIR")
@@ -34,7 +38,7 @@ existing_pdfs = [meta.get("source_pdf") for meta in all_entries["metadatas"]]
 dataset = MAIN_DIR + "dataset/"
 files = os.listdir(dataset)
 
-print("Looking for new PDFs to append to our database...")
+LOGGER.info("Looking for new PDFs to append to our database...")
 # Look for new PDFs to append to our database
 pdf_files = [
     os.path.join(dataset, f)
@@ -43,7 +47,7 @@ pdf_files = [
 ]
 
 documents, metadatas = process_documents(pdf_files)
-print("Adding new PDFs to the database...")
+LOGGER.info("Adding new PDFs to the database...")
 # Fill in the database
 if documents:
     db.add(
@@ -53,7 +57,7 @@ if documents:
     )
 
 # Prompting
-print("Retrieving relevant documents...")
+LOGGER.info("Retrieving relevant documents...")
 embed_fn.document_mode = False
 query = "I need a presentation about AI agents."
 query_oneline = query.replace(
@@ -72,24 +76,24 @@ for passage, metas in zip(documents, metadatas):
     prompt += f"IMAGES: {images_passage}\n"
 
 # Create a new subfolder
-print("💾Creating new subfolder...")
+LOGGER.info("💾Creating new subfolder...")
 base_path = MAIN_DIR + "output/"
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 work_dir = os.path.join(base_path, timestamp)
 os.makedirs(work_dir, exist_ok=False)
-print(f"📁 Created folder: {work_dir}")
+LOGGER.info(f"📁 Created folder: {work_dir}")
 
 # Generate the presentation code
 model_name = "gemini-2.0-flash"
 # model_name = "gemini-2.5-flash-preview-04-17"
-print("⭐️Generating response...")
+LOGGER.info("⭐️Generating response...")
 answer = client.models.generate_content(model=model_name, contents=prompt)
-print(f"🎲 Generated the response using: {model_name}")
+LOGGER.info(f"🎲 Generated the response using: {model_name}")
 
 # Create a subfolder for graphics
 graphics_dir = os.path.join(work_dir, "gfx")
 os.makedirs(graphics_dir, exist_ok=True)
-print(f"🌄 Images will be saved to: {graphics_dir}")
+LOGGER.info(f"🌄 Images will be saved to: {graphics_dir}")
 
 # Find images, which are used in the presentation
 pattern_img = re.compile(
@@ -128,5 +132,5 @@ for metadata in metadatas:
     save_pdf_images(metadata["pdf_path"], req_imgs, graphics_dir)
     save_pdf_figures(metadata["pdf_path"], req_figs, graphics_dir)
 
-print("Compiling presentation...")
+LOGGER.info("Compiling presentation...")
 CompilePresentation(answer.text, work_dir)
