@@ -12,13 +12,13 @@ from src import (
     prompt,
     CompilePresentation,
     client,
-    # demo,
+    demo,
     Logger,
 )
 
 LOGGER = Logger.get_logger()
 
-# demo.launch()
+demo.launch()
 load_dotenv()
 MAIN_DIR = os.getenv("MAIN_DIR")
 
@@ -49,15 +49,15 @@ MAIN_DIR = os.getenv("MAIN_DIR")
 #     )
 
 # Prompting
-LOGGER.info("Retrieving relevant documents...")
-embed_fn.document_mode = False
-query = "I need an interesting presentation."
-query_oneline = query.replace(
-    "\n", " "
-)  # (Optional) For cleaner input in case of newlines
-result = db.query(query_texts=[query], n_results=2)
-[documents] = result["documents"]
-[metadatas] = result["metadatas"]
+# LOGGER.info("Retrieving relevant documents...")
+# embed_fn.document_mode = False
+# query = "I need an interesting presentation."
+# query_oneline = query.replace(
+#     "\n", " "
+# )  # (Optional) For cleaner input in case of newlines
+# result = db.query(query_texts=[query], n_results=2)
+# [documents] = result["documents"]
+# [metadatas] = result["metadatas"]
 
 
 # for passage, metas in zip(documents, metadatas):
@@ -68,24 +68,24 @@ result = db.query(query_texts=[query], n_results=2)
 #     prompt += f"IMAGES: {images_passage}\n"
 
 # Create a new subfolder
-LOGGER.info("💾 Creating new subfolder...")
-base_path = MAIN_DIR + "output/"
-timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-work_dir = os.path.join(base_path, timestamp)
-os.makedirs(work_dir, exist_ok=False)
-LOGGER.info("📁 Created folder: %s", work_dir)
+# LOGGER.info("💾 Creating new subfolder...")
+# base_path = MAIN_DIR + "output/"
+# timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+# work_dir = os.path.join(base_path, timestamp)
+# os.makedirs(work_dir, exist_ok=False)
+# LOGGER.info("📁 Created folder: %s", work_dir)
 
-# Generate the presentation code
-model_name = "gemini-2.0-flash"
-# model_name = "gemini-2.5-flash-preview-04-17"
-LOGGER.info("⭐️ Generating response...")
-answer = client.models.generate_content(model=model_name, contents=prompt)
-LOGGER.info("🎲 Generated the response using: %s", model_name)
+# # Generate the presentation code
+# model_name = "gemini-2.0-flash"
+# # model_name = "gemini-2.5-flash-preview-04-17"
+# LOGGER.info("⭐️ Generating response...")
+# answer = client.models.generate_content(model=model_name, contents=prompt)
+# LOGGER.info("🎲 Generated the response using: %s", model_name)
 
-# Create a subfolder for graphics
-graphics_dir = os.path.join(work_dir, "gfx")
-os.makedirs(graphics_dir, exist_ok=True)
-LOGGER.info("🌄 Images will be saved to: %s", graphics_dir)
+# # Create a subfolder for graphics
+# graphics_dir = os.path.join(work_dir, "gfx")
+# os.makedirs(graphics_dir, exist_ok=True)
+# LOGGER.info("🌄 Images will be saved to: %s", graphics_dir)
 
 # # Find images, which are used in the presentation
 # pattern_img = re.compile(
