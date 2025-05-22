@@ -1,4 +1,4 @@
-#
+# utils/gradio_user_settings.py
 
 from pathlib import Path
 import shutil
@@ -17,6 +17,8 @@ def upload_files(files):
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
     messages = []
+    saved_paths = []
+
     for file in files:
         try:
             temp_path = Path(file.name)
@@ -34,23 +36,10 @@ def upload_files(files):
                 messages.append(f"✅ Uploaded: {file_name}")
                 LOGGER.info("Uploaded file %s to %s", file_name, UPLOAD_DIR)
 
+            saved_paths.append(str(target_path))
+
         except Exception as e:
             LOGGER.error(f"Error uploading {file_name}: {e}")
             messages.append(f"❌ Error uploading {file_name}: {e}")
 
-    return "\n".join(messages)
-
-
-def process_presentation_topic(topic):
-    # Placeholder logic – you can later generate a LaTeX outline here
-    return f"📌 Topic received: '{topic}'\n\nReady to generate your slides!"
-
-
-def process_presentation_style(style):
-    # Placeholder logic – you can later generate a LaTeX outline here
-    return f"🎨 Style selected: '{style}'\n\nReady to generate your slides!"
-
-
-def process_color_style(style):
-    # Placeholder logic – you can later generate a LaTeX outline here
-    return f"🎨 Color selected: '{style}'\n\nReady to generate your slides!"
+    return "\n".join(messages), saved_paths
