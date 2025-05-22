@@ -1,8 +1,4 @@
-"""
-logging_utils.py
-
-This module provides logging configuration.
-"""
+# utils/logging_utils.py
 
 import logging
 

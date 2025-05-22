@@ -1,17 +1,23 @@
+# interface/gradio_interface.py
+
 import gradio as gr
-from ..utils import (
-    upload_files,
-    process_presentation_topic,
-    process_presentation_style,
-    process_color_style,
-)
+from ..utils import upload_files
+from ..services import generate_presentation
 
 
 def upload_and_update_list(files, uploaded_list):
-    status = upload_files(files)
-    new_files = [file.name for file in files if file.name not in uploaded_list]
-    updated_list = uploaded_list + new_files
-    return status, updated_list, "\n".join(updated_list)
+    status, new_paths = upload_files(files)
+    updated_list = uploaded_list + [p for p in new_paths if p not in uploaded_list]
+    # file_list_display = "\n".join(file.name for file in updated_list)
+    return status, updated_list  # , file_list_display
+
+
+def generate_iframe(file_path):
+    if not file_path:
+        return ""
+    return (
+        f'<embed src="{file_path}" type="application/pdf" width="100%" height="600px">'
+    )
 
 
 with gr.Blocks() as demo:
@@ -28,7 +34,8 @@ with gr.Blocks() as demo:
             upload_button = gr.Button("Upload Files")
 
             gr.Markdown("## 🎨 Step 2: Choose the presentation and color themes")
-            dropdown = gr.Dropdown(
+            presentation_theme_state = gr.State("default")
+            theme_dropdown = gr.Dropdown(
                 choices=[
                     "default",
                     "Darmstadt",
@@ -61,11 +68,15 @@ with gr.Blocks() as demo:
                 value="default",  # default option
                 label="Choose a presentation theme",
             )
-            output = gr.Textbox()
-            dropdown.change(
-                fn=process_presentation_style, inputs=dropdown, outputs=output
+            # output = gr.Textbox()
+
+            theme_dropdown.change(
+                fn=lambda val: val,
+                inputs=theme_dropdown,
+                outputs=presentation_theme_state,
             )
-            dropdown = gr.Dropdown(
+            color_theme_state = gr.State("default")
+            color_dropdown = gr.Dropdown(
                 choices=[
                     "default",
                     "albatross",
@@ -86,8 +97,12 @@ with gr.Blocks() as demo:
                 value="default",  # default option
                 label="Choose a color theme",
             )
-            output = gr.Textbox()
-            dropdown.change(fn=process_color_style, inputs=dropdown, outputs=output)
+            # output = gr.Textbox()
+            color_dropdown.change(
+                fn=lambda val: val,
+                inputs=color_dropdown,
+                outputs=color_theme_state,
+            )
 
             gr.Markdown("## 🧠 Step 3: Enter Presentation Topic")
             topic_input = gr.Textbox(
@@ -106,12 +121,29 @@ with gr.Blocks() as demo:
             gr.Markdown("## 📝 Outline or Confirmation")
             topic_output = gr.Textbox(label="Topic Output", lines=6, interactive=False)
 
+            gr.Markdown("## 🎉 Final Presentation")
+            pdf_output = gr.File(label="Download/View Presentation")
+            pdf_output_viewer = gr.HTML(label="Presentation Preview")
+
+            submit_topic_button.click(
+                fn=generate_presentation,
+                inputs=[
+                    presentation_theme_state,
+                    color_theme_state,
+                    topic_input,
+                    uploaded_files_state,
+                ],
+                outputs=[topic_output, pdf_output, pdf_output_viewer],
+            )
+
     upload_button.click(
         fn=upload_and_update_list,
         inputs=[file_input, uploaded_files_state],
         outputs=[upload_output, uploaded_files_state],
     )
 
-    submit_topic_button.click(
-        fn=process_presentation_topic, inputs=[topic_input], outputs=[topic_output]
+    pdf_output.change(
+        fn=generate_iframe,
+        inputs=pdf_output,
+        outputs=pdf_output_viewer,
     )

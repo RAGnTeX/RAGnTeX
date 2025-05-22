@@ -1,3 +1,4 @@
+# compilation/latex_compilation.py
 import os
 import subprocess
 from ..utils import Logger
@@ -18,7 +19,7 @@ def CompilePresentation(latex_code, work_dir):
         f.write(latex_code)
 
     LOGGER.info("=" * 100)
-    LOGGER.info("📄 Files in the directory:")
+    LOGGER.info("📄 Files in the directory: %s", work_dir)
 
     # List files in the directory using Python (instead of `!ls`)
     for file in os.listdir(work_dir):
