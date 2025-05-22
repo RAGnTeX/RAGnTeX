@@ -1,3 +1,4 @@
 from .google_client import client
+from .generator import generate_presentation
 
-__all__ = ["client"]
+__all__ = ["client", "generate_presentation"]
