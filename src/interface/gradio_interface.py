@@ -169,22 +169,22 @@ with gr.Blocks(theme=theme,js=js_func) as demo:
             pdf_output = gr.File(label="Download/View Presentation")
             pdf_output_viewer = gr.HTML(label="Presentation Preview")
 
-            submit_topic_button.click(
-                fn=generate_presentation,
-                inputs=[
-                    presentation_theme_state,
-                    color_theme_state,
-                    topic_input,
-                    uploaded_files_state,
-                ],
-                outputs=[topic_output, pdf_output, pdf_output_viewer],
-            )
-
     upload_button.click(
         fn=upload_and_update_list,
         inputs=[file_input, uploaded_files_state],
         outputs=[upload_output, uploaded_files_state],
     )
+
+    submit_topic_button.click(
+        fn=generate_presentation,
+        inputs=[
+            presentation_theme_state,
+            color_theme_state,
+            topic_input,
+            uploaded_files_state,
+        ],
+        outputs=[topic_output, pdf_output, pdf_output_viewer],
+        )
 
     pdf_output.change(
         fn=generate_iframe,
