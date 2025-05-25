@@ -1,4 +1,5 @@
-# services/google_client.py
+"""Initialize and export a GenAI client using the provided Google API key."""
+
 import os
 from google import genai
 from dotenv import load_dotenv

@@ -1,15 +1,22 @@
 # interface/gradio_interface.py
 
 import gradio as gr
-from ..utils import upload_files
+from .upload_files import upload_files
 from ..services import generate_presentation
 
 
-def upload_and_update_list(files, uploaded_list):
+def upload_and_update_list(files: list, uploaded_list) -> tuple[str, list[str]]:
+    """Helper function to handle uploaded documents and update the list of uploaded files.
+    Args:
+        files (list): List of file-like objects to be uploaded.
+        uploaded_list (list): Current list of uploaded file paths.
+    Returns:
+        tuple: A 2-element tuple:
+            - str: Status message indicating the result of the upload operation.
+            - list[str]: Updated list of uploaded file paths."""
     status, new_paths = upload_files(files)
     updated_list = uploaded_list + [p for p in new_paths if p not in uploaded_list]
-    # file_list_display = "\n".join(file.name for file in updated_list)
-    return status, updated_list  # , file_list_display
+    return status, updated_list
 
 
 def generate_iframe(file_path):

@@ -1,13 +1,19 @@
-# processing/images_processing.py
-import fitz
+"""Module handling images exrtraction and processing from the uploaded PDF documents."""
+
 import re
 import os
 import hashlib
 from collections import defaultdict
+import fitz
 from rtree import index
+
+from ..telemetry import Logger
+
+LOGGER = Logger.get_logger()
 
 
 def find_image_caption(page, image_bbox, max_distance=100):
+    """Method to find and extract image caption based on the image bounding box."""
     # Get all text blocks on the page
     blocks = page.get_text("dict")["blocks"]
     image_bottom = image_bbox.y1
@@ -56,6 +62,7 @@ def find_image_caption(page, image_bbox, max_distance=100):
 
 
 def extract_images(pdf, doc, page, page_num):
+    """Extract images from a PDF page and classify them based on their aspect ratio."""
     images = page.get_images(full=True)
 
     imgs = []
@@ -210,7 +217,6 @@ def extract_vector(pdf, doc, page, page_num):
     min_size = page_size * MIN_SIZE
     max_size = page_size * MAX_SIZE
 
-    all_text = page.get_text()
     drawings = page.get_drawings()
 
     # Group drawings into figures
@@ -268,6 +274,7 @@ def extract_vector(pdf, doc, page, page_num):
 
 
 def save_pdf_images(pdf_path: str, req_imgs: list, images_dir: str):
+    """Save images used in the presentation to the specified directory."""
     doc = fitz.open(pdf_path)
     pdf = os.path.splitext(os.path.basename(pdf_path))[0]
 
@@ -328,7 +335,6 @@ def save_pdf_figures(pdf_path: str, req_figs: list, figures_dir: str):
             min_size = page_size * MIN_SIZE
             max_size = page_size * MAX_SIZE
 
-            all_text = page.get_text()
             drawings = page.get_drawings()
 
             # Group drawings into figures
@@ -370,3 +376,53 @@ def save_pdf_figures(pdf_path: str, req_figs: list, figures_dir: str):
                             f.write(figure_bytes)
 
     return True
+
+
+def find_used_fgx(answer, work_dir: str, metadatas: list):
+    """Finds and saves the figures used in the LLM output to the gfx directory
+    where the presentation will be compiled.
+    Args:
+        answer (str): The LLM answer containing names of the figures.
+        work_dir (str): The working directory where the presentation will be compiled.
+        metadatas (list): List of metadata dictionaries containing PDF paths.
+    """
+    graphics_dir = os.path.join(work_dir, "gfx")
+    os.makedirs(graphics_dir, exist_ok=True)
+    LOGGER.info("🌄 Images will be saved to: %s", graphics_dir)
+
+    # Find images, which are used in the presentation
+    pattern_img = re.compile(
+        r"doc(?P<doc>[a-zA-Z0-9_]+)_page(?P<page>\d+)_img(?P<img>\d+)_hash(?P<hash>[a-fA-F0-9]{8})\.png"
+    )
+    matches_img = pattern_img.finditer(answer.text)
+
+    req_imgs = []
+    for match in matches_img:
+        req_img = {
+            "doc": match.group("doc"),
+            "page": int(match.group("page")),
+            "img": int(match.group("img")),
+            "hash": match.group("hash"),
+        }
+        req_imgs.append(req_img)
+
+    # Find figures, which are used in the presentation
+    pattern_fig = re.compile(
+        r"doc(?P<doc>[a-zA-Z0-9_]+)_page(?P<page>\d+)_fig(?P<fig>\d+)_hash(?P<hash>[a-fA-F0-9]{8})\.png"
+    )
+    matches_fig = pattern_fig.finditer(answer.text)
+
+    req_figs = []
+    for match in matches_fig:
+        req_fig = {
+            "doc": match.group("doc"),
+            "page": int(match.group("page")),
+            "fig": int(match.group("fig")),
+            "hash": match.group("hash"),
+        }
+        req_figs.append(req_fig)
+
+    # Save the required graphics
+    for metadata in metadatas:
+        save_pdf_images(metadata["pdf_path"], req_imgs, graphics_dir)
+        save_pdf_figures(metadata["pdf_path"], req_figs, graphics_dir)
