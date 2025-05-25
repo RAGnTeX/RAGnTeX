@@ -1,0 +1,4 @@
+.env
+.*
+activate_poetry.sh
+**/__pycache__/
