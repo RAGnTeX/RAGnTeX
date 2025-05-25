@@ -34,12 +34,12 @@ def upload_files(files):
             else:
                 shutil.move(str(temp_path), str(target_path))
                 messages.append(f"✅ Uploaded: {file_name}")
-                LOGGER.info("Uploaded file %s to %s", file_name, UPLOAD_DIR)
+                LOGGER.info("📤 Uploaded file %s to %s", file_name, UPLOAD_DIR)
 
             saved_paths.append(str(target_path))
 
         except Exception as e:
-            LOGGER.error(f"Error uploading {file_name}: {e}")
+            LOGGER.error("❌ Error uploading %s", file_name, exc_info=e)
             messages.append(f"❌ Error uploading {file_name}: {e}")
 
     return "\n".join(messages), saved_paths

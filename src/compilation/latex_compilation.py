@@ -18,7 +18,6 @@ def CompilePresentation(latex_code, work_dir):
     with open(tex_file, "w") as f:
         f.write(latex_code)
 
-    LOGGER.info("=" * 100)
     LOGGER.info("📄 Files in the directory: %s", work_dir)
 
     # List files in the directory using Python (instead of `!ls`)
@@ -45,7 +44,7 @@ def CompilePresentation(latex_code, work_dir):
 
     except subprocess.CalledProcessError as e:
         # Handle error in case of failed LaTeX compilation
-        LOGGER.error("❌ PDF generation failed. Here's the log: %s", e.stderr.decode())
+        LOGGER.error("❌ PDF generation failed.", exc_info=e)
     else:
         # Check for PDF output
         if not os.path.exists("presentation.pdf"):
