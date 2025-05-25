@@ -1,4 +1,5 @@
-# database/database.py
+"""Database module for user-uploaded files."""
+
 from google.api_core import retry
 from google.genai import types
 from google import genai
@@ -12,6 +13,8 @@ is_retriable = lambda e: (isinstance(e, genai.errors.APIError) and e.code in {42
 
 
 class GeminiEmbeddingFunction(EmbeddingFunction):
+    """A class to handle retrieval embedding functions using Google Gemini API."""
+
     def __init__(self):
         self.document_mode = True
 

@@ -1,10 +1,14 @@
-# processing/document_processing.py
+"""Module handling PDF document processing and content extraction."""
+
 import re
-import fitz
 import os
-import hashlib
+from pathlib import Path
+import fitz
 
 from .images_processing import extract_images, extract_vector
+from ..telemetry import Logger
+
+LOGGER = Logger.get_logger()
 
 
 def extract_pdf_content(pdf_path: str):
@@ -67,3 +71,18 @@ def process_documents(pdf_files):
         metadatas.append(fixed_metadata)
 
     return documents, metadatas
+
+
+def delete_uploaded_files(uploaded_files):
+    """Delete uploaded files after processing."""
+    for file in uploaded_files:
+        try:
+            path = Path(file)
+            if path.exists():
+                path.unlink()  # Delete the file
+                LOGGER.info(f"Deleted file: {file}")
+            else:
+                LOGGER.warning(f"File not found for deletion: {file}")
+            LOGGER.info("🧹 Cleaned up uploaded files.")
+        except Exception as e:
+            LOGGER.warning(f"Failed to delete {file}", exc_info=e)

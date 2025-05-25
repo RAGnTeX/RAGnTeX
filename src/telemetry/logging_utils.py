@@ -1,4 +1,4 @@
-# utils/logging_utils.py
+"""Module for setting up and managing a global logger instance."""
 
 import logging
 
@@ -22,6 +22,16 @@ class Logger:
                 datefmt="%Y-%m-%d %H:%M:%S",
             )
             cls._logger = logging.getLogger("Logger")
+
+            # add compatibility with opentelemetry
+            otel_loggers = [
+                "opentelemetry.sdk",
+                "opentelemetry.trace",
+                "opentelemetry.exporter.otlp.proto.http.trace_exporter",
+            ]
+
+            for name in otel_loggers:
+                logging.getLogger(name).setLevel(logging.DEBUG)
 
     @classmethod
     def get_logger(cls) -> logging.Logger:

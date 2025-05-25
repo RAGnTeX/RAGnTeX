@@ -1,3 +1,5 @@
-from .latex_compilation import CompilePresentation
+"""This module initializes the latex compilation package."""
 
-__all__ = ["CompilePresentation"]
+from .latex_compilation import compile_presentation
+
+__all__ = ["compile_presentation"]

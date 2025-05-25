@@ -1,13 +1,20 @@
-# utils/gradio_user_settings.py
+"""Module to handle file uploads via UI."""
 
 from pathlib import Path
 import shutil
-from .logging_utils import Logger
+from ..telemetry.logging_utils import Logger
 
 LOGGER = Logger.get_logger()
 
 
-def upload_files(files):
+def upload_files(files: list) -> tuple[str, list[str]]:
+    """Upload files and save them in the temporary directory.
+    Args:
+        files (list): List of file-like objects to be uploaded.
+    Returns:
+        str: Message indicating the result of the upload operation.
+        list[str]: List of saved file paths.
+    """
     if not files:
         return "No files selected."
 
