@@ -25,17 +25,17 @@ def ingest_files_to_db(pdf_files) -> None:
     new_pdfs = [file for file in pdf_files if Path(file).name not in existing_pdfs]
 
     if not new_pdfs:
-        LOGGER.info("No new PDFs to ingest. Skipping ingestion.")
+        LOGGER.info("📂 No new PDFs to ingest. Skipping ingestion.")
         return
 
     # Process new files only
     documents, metadatas = process_documents(new_pdfs)
 
-    LOGGER.info(f"Adding {len(new_pdfs)} new PDFs to the database...")
+    LOGGER.info("➕ Adding %s new PDFs to the database...", len(new_pdfs))
     if documents:
         db.add(
             documents=documents,
             ids=[str(i) for i in range(len(documents))],
             metadatas=metadatas,
         )
-    LOGGER.info("Documents ingested successfully.")
+    LOGGER.info("✅ Documents ingested successfully.")

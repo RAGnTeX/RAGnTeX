@@ -17,7 +17,7 @@ def generate_presentation(theme, color, topic, uploaded_files):
     print(f"Theme: {theme}, Color: {color}, Topic: {topic}")
     ingest_files_to_db(uploaded_files)
 
-    LOGGER.info("Retrieving relevant documents...")
+    LOGGER.info("🔍 Retrieving relevant documents...")
     embed_fn.document_mode = False
 
     query_oneline = topic.replace(
@@ -95,9 +95,9 @@ def generate_presentation(theme, color, topic, uploaded_files):
         save_pdf_images(metadata["pdf_path"], req_imgs, graphics_dir)
         save_pdf_figures(metadata["pdf_path"], req_figs, graphics_dir)
 
-    LOGGER.info("Compiling presentation...")
+    LOGGER.info("🛠️ Compiling presentation...")
     CompilePresentation(answer.text, work_dir)
-    LOGGER.info("Presentation is ready!")
+    LOGGER.info("🎉 Presentation is ready!")
     # Clean up uploaded files
     print("uploaded_files", uploaded_files)
     for file in uploaded_files:
@@ -105,11 +105,11 @@ def generate_presentation(theme, color, topic, uploaded_files):
             path = Path(file)
             if path.exists():
                 path.unlink()  # Delete the file
-                LOGGER.info(f"Deleted file: {file}")
+                LOGGER.info("🗑️ Deleted file: %s", file)
             else:
-                LOGGER.warning(f"File not found for deletion: {file}")
+                LOGGER.warning("⚠️ File not found for deletion: %s", file)
         except Exception as e:
-            LOGGER.warning(f"Failed to delete {file}", exc_info=e)
+            LOGGER.warning("⚠️ Failed to delete %s", file, exc_info=e)
 
     LOGGER.info("🧹 Cleaned up uploaded files.")
     output_path = Path(work_dir + "/presentation.pdf")
