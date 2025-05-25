@@ -3,6 +3,7 @@
 import gradio as gr
 from ..utils import upload_files
 from ..services import generate_presentation
+import base64
 
 
 def upload_and_update_list(files, uploaded_list):
@@ -20,10 +21,53 @@ def generate_iframe(file_path):
     )
 
 
-with gr.Blocks() as demo:
-    gr.Markdown("# 📚 RAGnTeX LaTeX Presentation Generator")
+theme = gr.themes.Monochrome(
+    neutral_hue=gr.themes.Color(c50="#f8f4fe",  c100="#ede9fe", c200="#ddd6fe", c300="#c4b5fd",
+                                c400="#a78bfa", c500="#8b5cf6", c600="#7c3aed", c700="#6d28d9",
+                                c800="#5b21b6", c900="#4c1d95", c950="#181e44"),
+).set(
+    body_background_fill='*neutral_50',
+    body_text_color='*neutral_950'
+)
 
+js_func = """
+function refresh() {
+    const url = new URL(window.location);
+
+    if (url.searchParams.get('__theme') !== 'light') {
+        url.searchParams.set('__theme', 'light');
+        window.location.href = url.href;
+    }
+}
+"""
+
+def encode_image(image_path):
+    with open(image_path, "rb") as f:
+        data = f.read()
+        return f"data:image/png;base64,{base64.b64encode(data).decode()}"
+
+image_base64 = encode_image("gfx/long_logo.png")
+
+
+with gr.Blocks(theme=theme,js=js_func) as demo:
     uploaded_files_state = gr.State([])
+
+    gr.Markdown("<h1 style=\"text-align:center;\">AI-powered LaTeX Presentation Generator</h1>")
+    with gr.Row():
+        with gr.Column(scale=1):
+            gr.HTML(f"""
+                <div style="text-align:center;">
+                <img src="{image_base64}" style="max-width: 100%; height: auto;" />
+                </div>
+            """)
+        with gr.Column(scale=1):
+            gr.Markdown("<div style=\"text-align:justify; margin-top: 15px;\">Turn your PDFs and ideas into beautiful LaTeX "
+                        "presentations with AI. Built on top of the <a href=\"https://ragntex.github.io/lore/\">RAG\'n\'TeX</a>"
+                        " engine, this tool automatically selects relevant content and compiles well-structured"
+                        " slides. Ideal for students, researchers, and educators looking to save time and "
+                        "create topic-focused presentations with minimal effort.</div>")
+            gr.Markdown("<div style=\"text-align:justify; margin-top: 0px;\">Just upload your PDFs, click <b>Upload Files</b>, "
+                        "choose a theme, enter your topic, and hit <b>Generate Presentation</b> — it's that easy!</div>")
 
     with gr.Row():
         with gr.Column(scale=1):
@@ -31,7 +75,7 @@ with gr.Blocks() as demo:
             file_input = gr.File(
                 file_types=[".pdf"], file_count="multiple", label="Select PDF Files"
             )
-            upload_button = gr.Button("Upload Files")
+            upload_button = gr.Button("Upload Files", variant="primary")
 
             gr.Markdown("## 🎨 Step 2: Choose the presentation and color themes")
             presentation_theme_state = gr.State("default")
@@ -110,16 +154,16 @@ with gr.Blocks() as demo:
                 placeholder="e.g., Introduction to Quantum Computing",
                 lines=1,
             )
-            submit_topic_button = gr.Button("Generate Outline")
+            submit_topic_button = gr.Button("Generate Presentation", variant="primary")
 
         with gr.Column(scale=1):
-            gr.Markdown("## 📄 Uploaded Files (from State)")
+            gr.Markdown("## 📄 Uploaded Files")
             upload_output = gr.Textbox(
                 label="Upload Status", lines=3, interactive=False
             )
 
-            gr.Markdown("## 📝 Outline or Confirmation")
-            topic_output = gr.Textbox(label="Topic Output", lines=6, interactive=False)
+            gr.Markdown("## 📝 Presentation Processing")
+            topic_output = gr.Textbox(label="Compilation Status", lines=1, interactive=False)
 
             gr.Markdown("## 🎉 Final Presentation")
             pdf_output = gr.File(label="Download/View Presentation")
