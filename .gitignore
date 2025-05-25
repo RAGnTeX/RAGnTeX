@@ -1,4 +1,5 @@
 # Custom Python .gitignore file
+.DS_Store
 activate_poetry.sh
 
 
