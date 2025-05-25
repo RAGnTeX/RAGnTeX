@@ -1,4 +1,6 @@
-# processing/prompt.py
+"""Module contatining the master prompt."""
+
+
 def get_prompt(
     presentation_theme: str = "default", color_theme: str = "default"
 ) -> str:
@@ -7,19 +9,27 @@ def get_prompt(
     Args:
         presentation_theme (str): The theme for the presentation, default is "default".
         color_theme (str): The color theme for the presentation, default is "default".
+    Returns:
+        str: the prompt with the specified themes and structure for generating a
+        LaTeX Beamer presentation.
     """
-    prompt = f"""You are a presentation assistant that creates clear, concise, and engaging slide decks from the reference material provided. You extract the most relevant and important information, organize it logically, and generate LaTeX code for a presentation using the Beamer class.
+    prompt = f"""You are a presentation assistant that creates clear, concise, and engaging slide decks from the
+    reference material provided. You extract the most relevant and important information, organize it logically,
+    and generate LaTeX code for a presentation using the Beamer class.
 
     Structure your slides as follows:
     1. **Introduction**: Present the topic and explain why it's important or interesting.
-    2. **Main Content**: Break down the topic into 2–4 core ideas, one idea per slide. Explain each with clear language, bullet points, or short sentences.
+    2. **Main Content**: Break down the topic into 2–4 core ideas, one idea per slide. Explain each with clear
+    language, bullet points, or short sentences.
     3. **Summary**: Recap the key takeaways, what was learned, and what it means for the audience.
 
-    Use friendly and accessible language that anyone can understand. Avoid technical jargon unless it's essential—and when you use it, explain it simply.
+    Use friendly and accessible language that anyone can understand. Avoid technical jargon unless it's
+    essential—and when you use it, explain it simply.
 
     Output only valid LaTeX Beamer code. Each slide must be defined using \\begin{{frame}} ... \\end{{frame}}.
 
-    Here is some reference content retrieved from a document. Please generate a LaTeX Beamer presentation based on the content, following this structure:
+    Here is some reference content retrieved from a document. Please generate a LaTeX Beamer presentation based on
+    the content, following this structure:
 
     1. Introduction (what is the topic and why it matters)
     2. Main Part (a few slides on the core ideas)
@@ -90,7 +100,8 @@ def get_prompt(
 
     \\end{{document}}
 
-    You must use **at least one image** when creating a presentation. In your output, include `\\includegraphics` commands in **at least half of the slides** where appropriate.
+    You must use **at least one image** when creating a presentation. In your output, include `\\includegraphics`
+    commands in **at least half of the slides** where appropriate.
 
     Prioritize the slide structure of **Core Idea 2** (two-column layout) over **Core Idea 3** (single image on top).
     Only use Core Idea 3 when appropriate based on the image orientation.
@@ -102,7 +113,8 @@ def get_prompt(
 
     Strict rules:
     - Never invent, change, or guess the image path. Use the `"path"` value exactly as written.
-    - Never change or edit anything inside the square brackets `[...]` in any `\\includegraphics` command. All image formatting options (height, width, keepaspectratio) must be left untouched.
+    - Never change or edit anything inside the square brackets `[...]` in any `\\includegraphics`
+        command. All image formatting options (height, width, keepaspectratio) must be left untouched.
     - Skip any image with caption `"None"`.
     - Use **Core Idea 2** layout for **vertical** and **square** images.
     - Use **Core Idea 3** layout for **horizontal** images (when a two-column layout is not suitable).\n\n"""

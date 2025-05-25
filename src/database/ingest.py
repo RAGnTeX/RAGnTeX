@@ -1,8 +1,10 @@
-# database/ingest.py
+"""Ingest module for adding new PDF files to the database."""
+
 from pathlib import Path
 from .database import db
-from ..utils import Logger
+from ..telemetry import Logger
 from ..processing import process_documents
+from ..telemetry import traced_block
 
 LOGGER = Logger.get_logger()
 
@@ -31,11 +33,14 @@ def ingest_files_to_db(pdf_files) -> None:
     # Process new files only
     documents, metadatas = process_documents(new_pdfs)
 
-    LOGGER.info(f"Adding {len(new_pdfs)} new PDFs to the database...")
+    LOGGER.info("Adding %d new PDFs to the database...", len(new_pdfs))
     if documents:
         db.add(
             documents=documents,
             ids=[str(i) for i in range(len(documents))],
             metadatas=metadatas,
         )
+    with traced_block("📑 injest_docs_to_db") as span:
+        span.set_attribute("input.n_documents", len(documents))
+        span.set_attribute("output.n_documents_added", len(documents))
     LOGGER.info("Documents ingested successfully.")
