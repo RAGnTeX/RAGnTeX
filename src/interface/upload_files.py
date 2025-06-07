@@ -29,7 +29,7 @@ def upload_files(files: list) -> tuple[str, list[str]]:
     for file in files:
         try:
             temp_path = Path(file.name)
-            file_name = temp_path.name
+            file_name = temp_path.name.replace(" ", "_")
             target_path = UPLOAD_DIR / file_name
 
             if not temp_path.exists():
