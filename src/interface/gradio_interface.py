@@ -23,9 +23,17 @@ def upload_and_update_list(files: list, uploaded_list) -> tuple[str, list[str]]:
 def generate_iframe(file_path):
     if not file_path:
         return ""
-    return (
-        f'<embed src="{file_path}" type="application/pdf" width="100%" height="600px">'
-    )
+    else:
+        with open(file_path, "rb") as f:
+            base64_pdf = base64.b64encode(f.read()).decode("utf-8")
+        # pdf_display = f'''
+        #     <div style="position:relative; width:100%; padding-top:76.5%;">
+        #     <iframe src="data:application/pdf;base64,{base64_pdf}#view=FitH" 
+        #     style="position:absolute; top:0; left:0; width:100%; height:100%; border:none;">
+        #     </iframe></div>
+        # '''
+        pdf_display = f'<iframe width="100%" height="auto" src="data:application/pdf;base64,{base64_pdf}"></iframe>'
+    return pdf_display
 
 
 theme = gr.themes.Monochrome(
