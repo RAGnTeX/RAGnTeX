@@ -3,11 +3,12 @@
 import re
 import os
 import hashlib
+import json
 from collections import defaultdict
 import fitz
 from rtree import index
 
-from ..telemetry import Logger
+from ..telemetry import Logger, traced_block
 
 LOGGER = Logger.get_logger()
 
@@ -64,7 +65,6 @@ def find_image_caption(page, image_bbox, max_distance=100):
 def extract_images(pdf, doc, page, page_num):
     """Extract images from a PDF page and classify them based on their aspect ratio."""
     images = page.get_images(full=True)
-
     imgs = []
     for img_index, img in enumerate(images):
         # Extract the image
@@ -81,31 +81,32 @@ def extract_images(pdf, doc, page, page_num):
                 image_bbox = fitz.Rect(img_info["bbox"])
                 break
 
-        # Get the image ratio
-        width = image_bbox.width
-        height = image_bbox.height
-        ratio = width / height if height != 0 else None
+        if image_bbox:
+            # Get the image ratio
+            width = image_bbox.width
+            height = image_bbox.height
+            ratio = width / height if height != 0 else None
 
-        # Classify the image based on the ratio
-        if ratio >= 1.5:
-            image_type = "horizontal"
-        elif ratio <= 0.67:
-            image_type = "vertical"
-        else:
-            image_type = "square"
+            # Classify the image based on the ratio
+            if ratio >= 1.5:
+                image_type = "horizontal"
+            elif ratio <= 0.67:
+                image_type = "vertical"
+            else:
+                image_type = "square"
 
-        # Get caption based on bbox
-        caption = find_image_caption(page, image_bbox) if image_bbox else None
+            # Get caption based on bbox
+            caption = find_image_caption(page, image_bbox) if image_bbox else None
 
-        # Append an image
-        imgs.append(
-            {
-                "name": image_name,
-                "caption": caption,
-                "ratio": image_type,
-                "hash": image_hash,
-            }
-        )
+            # Append an image
+            imgs.append(
+                {
+                    "name": image_name,
+                    "caption": caption,
+                    "ratio": image_type,
+                    "hash": image_hash,
+                }
+            )
 
     return imgs
 
@@ -386,43 +387,45 @@ def find_used_fgx(answer, work_dir: str, metadatas: list):
         work_dir (str): The working directory where the presentation will be compiled.
         metadatas (list): List of metadata dictionaries containing PDF paths.
     """
-    graphics_dir = os.path.join(work_dir, "gfx")
-    os.makedirs(graphics_dir, exist_ok=True)
-    LOGGER.info("🌄 Images will be saved to: %s", graphics_dir)
+    with traced_block("👀 find_used_fgx") as span:
+        graphics_dir = os.path.join(work_dir, "gfx")
+        os.makedirs(graphics_dir, exist_ok=True)
+        LOGGER.info("🌄 Images will be saved to: %s", graphics_dir)
 
-    # Find images, which are used in the presentation
-    pattern_img = re.compile(
-        r"doc(?P<doc>[a-zA-Z0-9_]+)_page(?P<page>\d+)_img(?P<img>\d+)_hash(?P<hash>[a-fA-F0-9]{8})\.png"
-    )
-    matches_img = pattern_img.finditer(answer.text)
+        # Find images, which are used in the presentation
+        pattern_img = re.compile(
+            r"doc(?P<doc>[a-zA-Z0-9_]+)_page(?P<page>\d+)_img(?P<img>\d+)_hash(?P<hash>[a-fA-F0-9]{8})\.png"
+        )
+        matches_img = pattern_img.finditer(answer.text)
 
-    req_imgs = []
-    for match in matches_img:
-        req_img = {
-            "doc": match.group("doc"),
-            "page": int(match.group("page")),
-            "img": int(match.group("img")),
-            "hash": match.group("hash"),
-        }
-        req_imgs.append(req_img)
+        req_imgs = []
+        for match in matches_img:
+            req_img = {
+                "doc": match.group("doc"),
+                "page": int(match.group("page")),
+                "img": int(match.group("img")),
+                "hash": match.group("hash"),
+            }
+            print("matches_img = ", match.group("doc"))
+            req_imgs.append(req_img)
 
-    # Find figures, which are used in the presentation
-    pattern_fig = re.compile(
-        r"doc(?P<doc>[a-zA-Z0-9_]+)_page(?P<page>\d+)_fig(?P<fig>\d+)_hash(?P<hash>[a-fA-F0-9]{8})\.png"
-    )
-    matches_fig = pattern_fig.finditer(answer.text)
-
-    req_figs = []
-    for match in matches_fig:
-        req_fig = {
-            "doc": match.group("doc"),
-            "page": int(match.group("page")),
-            "fig": int(match.group("fig")),
-            "hash": match.group("hash"),
-        }
-        req_figs.append(req_fig)
-
-    # Save the required graphics
-    for metadata in metadatas:
-        save_pdf_images(metadata["pdf_path"], req_imgs, graphics_dir)
-        save_pdf_figures(metadata["pdf_path"], req_figs, graphics_dir)
+        # Find figures, which are used in the presentation
+        pattern_fig = re.compile(
+            r"doc(?P<doc>[a-zA-Z0-9_]+)_page(?P<page>\d+)_fig(?P<fig>\d+)_hash(?P<hash>[a-fA-F0-9]{8})\.png"
+        )
+        matches_fig = pattern_fig.finditer(answer.text)
+        req_figs = []
+        for match in matches_fig:
+            req_fig = {
+                "doc": match.group("doc"),
+                "page": int(match.group("page")),
+                "fig": int(match.group("fig")),
+                "hash": match.group("hash"),
+            }
+            print("matches_fig = ", match.group("doc"))
+            req_figs.append(req_fig)
+        span.set_attribute("output.req_figs", json.dumps(req_figs))
+        # Save the required graphics
+        for metadata in metadatas:
+            save_pdf_images(metadata["pdf_path"], req_imgs, graphics_dir)
+            save_pdf_figures(metadata["pdf_path"], req_figs, graphics_dir)

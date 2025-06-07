@@ -5,8 +5,8 @@ import hashlib
 from typing import Union
 from contextlib import contextmanager
 
-# import psycopg2
 import base64
+import langfuse
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
@@ -58,7 +58,9 @@ def traced_block(name: str, **attrs):
         for key, value in attrs.items():
             span.set_attribute(key, value)
         try:
-            yield span  # Control to the block
+            # trace_id = format(span.get_span_context().trace_id, "032x")
+            # yield span, trace_id
+            yield span
         except Exception as e:
             # Record exception and mark span status as error
             span.record_exception(e)
@@ -87,3 +89,22 @@ def generate_with_trace(client, model_name: str, prompt: str) -> Union[object, N
             span.record_exception(e)
             span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
             return LOGGER.error("Error in spans while generating content: %s", e)
+
+
+def submit_feedback(rating: str, comment: str, trace_id: str) -> str:
+    if not rating:
+        return "⚠️ Please select a star rating before submitting."
+
+    score = rating.count("⭐️")  # Converts emoji to numeric
+    stars_display = "⭐️" * score + "☆" * (5 - score)
+
+    # Submit to Langfuse if trace_id is present
+    if trace_id:
+        try:
+            langfuse.feedback(
+                trace_id=trace_id, name="user_feedback", comment=comment, score=score
+            )
+        except Exception as e:
+            return f"✅ Feedback received ({stars_display}), but Langfuse logging failed: {e}"
+
+    return f"✅ Thanks for your {stars_display} rating!{' Your comment: ' + comment if comment else ''}"

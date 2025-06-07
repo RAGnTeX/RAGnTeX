@@ -4,7 +4,6 @@ from pathlib import Path
 from .database import db
 from ..telemetry import Logger
 from ..processing import process_documents
-from ..telemetry import traced_block
 
 LOGGER = Logger.get_logger()
 
@@ -32,6 +31,7 @@ def ingest_files_to_db(pdf_files) -> None:
 
     # Process new files only
     documents, metadatas = process_documents(new_pdfs)
+    # print("ingest metadatas", metadatas)
 
     LOGGER.info("➕ Adding %s new PDFs to the database...", len(new_pdfs))
     if documents:

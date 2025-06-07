@@ -34,10 +34,12 @@ def generate_presentation(theme, color, topic, uploaded_files) -> tuple[str, str
         input_color=color,
         input_topic=topic,
         file_count=len(uploaded_files),
-    ):
+    ) as span:
+        trace_id = format(span.get_span_context().trace_id, "032x")
         ingest_files_to_db(uploaded_files)
 
         [documents], [metadatas] = retrive_files_from_db(topic)
+        # print("metadatas retrieved:", metadatas)
 
         prompt = get_prompt(theme, color)
 
@@ -47,6 +49,8 @@ def generate_presentation(theme, color, topic, uploaded_files) -> tuple[str, str
 
             prompt += f"PASSAGE: {passage_oneline}\n"
             prompt += f"IMAGES: {images_passage}\n"
+            # print(f"passage_oneline = {passage_oneline}")
+            # print(f"images_passage = {images_passage}")
 
         work_dir = create_output_folder()
         # Generate the presentation code
@@ -60,4 +64,4 @@ def generate_presentation(theme, color, topic, uploaded_files) -> tuple[str, str
 
         delete_uploaded_files(uploaded_files)
         output_path = Path(work_dir + "/presentation.pdf")
-        return "Presentation generated successfully!", str(output_path), ""
+        return "Presentation generated successfully!", str(output_path), "", trace_id
