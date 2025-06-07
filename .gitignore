@@ -1,7 +1,7 @@
 # Custom Python .gitignore file
 .DS_Store
 activate_poetry.sh
-
+uploaded_docs/*
 
 
 # Byte-compiled / optimized / DLL files

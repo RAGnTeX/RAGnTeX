@@ -3,6 +3,7 @@
 import gradio as gr
 from .upload_files import upload_files
 from ..services import generate_presentation
+from ..telemetry import submit_feedback
 import base64
 
 
@@ -29,13 +30,20 @@ def generate_iframe(file_path):
 
 
 theme = gr.themes.Monochrome(
-    neutral_hue=gr.themes.Color(c50="#f8f4fe",  c100="#ede9fe", c200="#ddd6fe", c300="#c4b5fd",
-                                c400="#a78bfa", c500="#8b5cf6", c600="#7c3aed", c700="#6d28d9",
-                                c800="#5b21b6", c900="#4c1d95", c950="#181e44"),
-).set(
-    body_background_fill='*neutral_50',
-    body_text_color='*neutral_950'
-)
+    neutral_hue=gr.themes.Color(
+        c50="#f8f4fe",
+        c100="#ede9fe",
+        c200="#ddd6fe",
+        c300="#c4b5fd",
+        c400="#a78bfa",
+        c500="#8b5cf6",
+        c600="#7c3aed",
+        c700="#6d28d9",
+        c800="#5b21b6",
+        c900="#4c1d95",
+        c950="#181e44",
+    ),
+).set(body_background_fill="*neutral_50", body_text_color="*neutral_950")
 
 js_func = """
 function refresh() {
@@ -48,33 +56,43 @@ function refresh() {
 }
 """
 
+
 def encode_image(image_path):
     with open(image_path, "rb") as f:
         data = f.read()
         return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
+
 image_base64 = encode_image("gfx/long_logo.png")
 
 
-with gr.Blocks(theme=theme,js=js_func) as demo:
+with gr.Blocks(theme=theme, js=js_func) as demo:
     uploaded_files_state = gr.State([])
 
-    gr.Markdown("<h1 style=\"text-align:center;\">AI-powered LaTeX Presentation Generator</h1>")
+    gr.Markdown(
+        '<h1 style="text-align:center;">AI-powered LaTeX Presentation Generator</h1>'
+    )
     with gr.Row():
         with gr.Column(scale=1):
-            gr.HTML(f"""
+            gr.HTML(
+                f"""
                 <div style="text-align:center;">
                 <img src="{image_base64}" style="max-width: 100%; height: auto;" />
                 </div>
-            """)
+            """
+            )
         with gr.Column(scale=1):
-            gr.Markdown("<div style=\"text-align:justify; margin-top: 15px;\">Turn your PDFs and ideas into beautiful LaTeX "
-                        "presentations with AI. Built on top of the <a href=\"https://ragntex.github.io/lore/\">RAG\'n\'TeX</a>"
-                        " engine, this tool automatically selects relevant content and compiles well-structured"
-                        " slides. Ideal for students, researchers, and educators looking to save time and "
-                        "create topic-focused presentations with minimal effort.</div>")
-            gr.Markdown("<div style=\"text-align:justify; margin-top: 0px;\">Just upload your PDFs, click <b>Upload Files</b>, "
-                        "choose a theme, enter your topic, and hit <b>Generate Presentation</b> — it's that easy!</div>")
+            gr.Markdown(
+                '<div style="text-align:justify; margin-top: 15px;">Turn your PDFs and ideas into beautiful LaTeX '
+                "presentations with AI. Built on top of the <a href=\"https://ragntex.github.io/lore/\">RAG'n'TeX</a>"
+                " engine, this tool automatically selects relevant content and compiles well-structured"
+                " slides. Ideal for students, researchers, and educators looking to save time and "
+                "create topic-focused presentations with minimal effort.</div>"
+            )
+            gr.Markdown(
+                '<div style="text-align:justify; margin-top: 0px;">Just upload your PDFs, click <b>Upload Files</b>, '
+                "choose a theme, enter your topic, and hit <b>Generate Presentation</b> — it's that easy!</div>"
+            )
 
     with gr.Row():
         with gr.Column(scale=1):
@@ -163,6 +181,26 @@ with gr.Blocks(theme=theme,js=js_func) as demo:
             )
             submit_topic_button = gr.Button("Generate Presentation", variant="primary")
 
+            gr.Markdown("## ⭐ Rate Us")
+            rating = gr.Radio(
+                choices=["⭐️", "⭐️⭐️", "⭐️⭐️⭐️", "⭐️⭐️⭐️⭐️", "⭐️⭐️⭐️⭐️⭐️"],
+                label="How would you rate this app?",
+                interactive=True,
+                type="value",
+                value=None,
+                show_label=True,
+                container=True,
+            )
+            feedback_comment = gr.Textbox(
+                label="Give us a comment (optional)",
+                placeholder="What did you like or what can be improved?",
+                lines=3,
+                max_lines=5,
+                interactive=True,
+            )
+            submit_feedback_button = gr.Button("Submit Feedback", variant="secondary")
+            feedback_output = gr.Textbox(label="Feedback Status", interactive=False)
+
         with gr.Column(scale=1):
             gr.Markdown("## 📄 Uploaded Files")
             upload_output = gr.Textbox(
@@ -170,11 +208,14 @@ with gr.Blocks(theme=theme,js=js_func) as demo:
             )
 
             gr.Markdown("## 📝 Presentation Processing")
-            topic_output = gr.Textbox(label="Compilation Status", lines=1, interactive=False)
+            topic_output = gr.Textbox(
+                label="Compilation Status", lines=1, interactive=False
+            )
 
             gr.Markdown("## 🎉 Final Presentation")
             pdf_output = gr.File(label="Download/View Presentation")
             pdf_output_viewer = gr.HTML(label="Presentation Preview")
+            trace_id_state = gr.State("")
 
     upload_button.click(
         fn=upload_and_update_list,
@@ -190,11 +231,17 @@ with gr.Blocks(theme=theme,js=js_func) as demo:
             topic_input,
             uploaded_files_state,
         ],
-        outputs=[topic_output, pdf_output, pdf_output_viewer],
-        )
+        outputs=[topic_output, pdf_output, pdf_output_viewer, trace_id_state],
+    )
 
     pdf_output.change(
         fn=generate_iframe,
         inputs=pdf_output,
         outputs=pdf_output_viewer,
+    )
+
+    submit_feedback_button.click(
+        fn=submit_feedback,
+        inputs=[rating, feedback_comment, trace_id_state],
+        outputs=feedback_output,
     )
