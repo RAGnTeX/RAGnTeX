@@ -16,8 +16,9 @@ def download_files(folder_path) -> str:
 
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for file in folder.rglob('*'):
-            if file.is_file():
-                zipf.write(file, arcname="presentation")
+            if file.is_file() and file != zip_path:
+                arcname = Path("presentation") / file.relative_to(folder)
+                zipf.write(file, arcname=arcname)
     LOGGER.info("📦 Created zip archive at %s", zip_path)
 
     return str(zip_path)
