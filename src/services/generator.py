@@ -61,6 +61,6 @@ def generate_presentation(theme, color, topic, uploaded_files) -> tuple[str, str
     find_used_gfx(answer, work_dir, metadatas)
     compile_presentation(answer.text, work_dir)
 
-        delete_uploaded_files(uploaded_files)
+    delete_uploaded_files(uploaded_files)
 
-        return "Presentation generated successfully!", trace_id, work_dir
+    return "Presentation generated successfully!", trace_id, work_dir
