@@ -42,3 +42,12 @@ The model outputs fully formatted compilable LaTeX code following a clear and co
 - **Summary**: Key takeaways  
 
 It also incorporates relevant images extracted from the documents, organizing them into LaTeX Beamer-friendly layouts (e.g., *Core Idea 2* and *Core Idea 3* slide formats).
+
+### Run docker:
+```bash
+docker run \
+  --env-file .env \
+  -e IN_DOCKER=true \
+  -p 7860:7860 \
+  -v /Users/annaershova/Documents/Projects/CapstoneGenAi/RAGnTeX/output:/app/output \
+  ragntex

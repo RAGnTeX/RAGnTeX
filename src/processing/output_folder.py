@@ -14,9 +14,8 @@ def create_output_folder() -> str:
         str: Path to the newly created output folder.
     """
     LOGGER.info("💾 Creating new subfolder...")
-    cwd = Path.cwd()
-    one_level_up = cwd.parent
-    base_path = one_level_up / "output"
+    base_path = Path.cwd() / "output"
+    base_path.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     work_dir = os.path.join(base_path, timestamp)
     os.makedirs(work_dir, exist_ok=False)
