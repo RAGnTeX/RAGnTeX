@@ -3,6 +3,7 @@
 from pathlib import Path
 import shutil
 from ..telemetry.logging_utils import Logger
+from ..database import ingest_files_to_db
 
 LOGGER = Logger.get_logger()
 
@@ -16,7 +17,7 @@ def upload_files(files: list) -> tuple[str, list[str]]:
         list[str]: List of saved file paths.
     """
     if not files:
-        return "No files selected."
+        return "❌ No new files selected", []
 
     current_file = Path(__file__).resolve()
     project_root = current_file.parents[2]  # utils → src → PROJECT ROOT
@@ -32,15 +33,16 @@ def upload_files(files: list) -> tuple[str, list[str]]:
             file_name = temp_path.name.replace(" ", "_")
             target_path = UPLOAD_DIR / file_name
 
-            if not temp_path.exists():
-                messages.append(f"❌ File not found: {file_name} (already uploaded?)")
+            if target_path.exists():
+                messages.append(f"⚠️ File already exists: {file_name}")
                 continue
 
-            if target_path.exists():
-                messages.append(f"⚠️ File already exists: {file_name} — skipped.")
+            if not temp_path.exists():
+                messages.append(f"❌ File not found: {file_name}")
+                continue
             else:
                 shutil.move(str(temp_path), str(target_path))
-                messages.append(f"✅ Uploaded: {file_name}")
+                messages.append(f"✅ Uploaded new file: {file_name}")
                 LOGGER.info("📤 Uploaded file %s to %s", file_name, UPLOAD_DIR)
 
             saved_paths.append(str(target_path))
@@ -48,5 +50,8 @@ def upload_files(files: list) -> tuple[str, list[str]]:
         except Exception as e:
             LOGGER.error("❌ Error uploading %s", file_name, exc_info=e)
             messages.append(f"❌ Error uploading {file_name}: {e}")
+
+    if saved_paths:
+        ingest_files_to_db(saved_paths)
 
     return "\n".join(messages), saved_paths
