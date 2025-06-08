@@ -74,6 +74,7 @@ def encode_image(image_path):
 
 
 image_base64 = encode_image("gfx/long_logo.png")
+github_base64 = encode_image("gfx/github-mark-white.png")
 
 
 with gr.Blocks(theme=theme, js=js_func) as demo:
@@ -205,7 +206,27 @@ with gr.Blocks(theme=theme, js=js_func) as demo:
             )
             submit_topic_button = gr.Button("Generate Presentation", variant="primary")
 
-            gr.Markdown("## ⭐ Rate Us")
+        with gr.Column(scale=1):
+            gr.Markdown("## 📄 Uploaded Files")
+            upload_output = gr.Textbox(
+                label="Upload Status", lines=3, interactive=False
+            )
+
+            gr.Markdown("## 📝 Presentation Processing")
+            compilation_status = gr.Textbox(
+                label="Compilation Status", lines=1, interactive=False
+            )
+
+            gr.Markdown("## 🎉 Final Presentation")
+            pdf_output = gr.File(label="Download/View Presentation", interactive=False, elem_id="download-box")
+            pdf_output_viewer = gr.HTML(label="Presentation Preview")
+            trace_id_state = gr.State("")
+
+    gr.Markdown("<br>")
+
+    gr.Markdown("## ⭐ Rate Us")
+    with gr.Row():
+        with gr.Column(scale=1):
             rating = gr.Radio(
                 choices=["⭐️", "⭐️⭐️", "⭐️⭐️⭐️", "⭐️⭐️⭐️⭐️", "⭐️⭐️⭐️⭐️⭐️"],
                 label="How would you rate this app?",
@@ -222,24 +243,61 @@ with gr.Blocks(theme=theme, js=js_func) as demo:
                 max_lines=5,
                 interactive=True,
             )
-            submit_feedback_button = gr.Button("Submit Feedback", variant="secondary")
-            feedback_output = gr.Textbox(label="Feedback Status", interactive=False)
-
         with gr.Column(scale=1):
-            gr.Markdown("## 📄 Uploaded Files")
-            upload_output = gr.Textbox(
-                label="Upload Status", lines=3, interactive=False
-            )
+            submit_feedback_button = gr.Button("Submit Feedback", variant="secondary")
+            feedback_output = gr.Textbox(label="Feedback Status", interactive=False, lines=4)
 
-            gr.Markdown("## 📝 Presentation Processing")
-            compilation_status = gr.Textbox(
-                label="Compilation Status", lines=1, interactive=False
+    gr.Markdown("## 🙌 Credits")
+    with gr.Row():
+        with gr.Column(scale=1):
+            gr.Markdown(
+                '<div style="text-align:justify; margin-top: 0px;">'
+                "RAG'n'TeX is a collaborative effort by a team of developers and researchers driven "
+                "to make the everyday work of scientists and professionals easier. By combining LaTeX with AI, "
+                "we create smart tools that help you build polished, accurate presentations quickly and smoothly. "
+                "Our goal is to make the process simple and stress-free, so you can spend more time on what really matters.</div>\n\n"
             )
+        with gr.Column(scale=1):
+            gr.HTML(f"""
+                <div style="display: flex; flex-direction: column; align-items: stretch;
+                    gap: 8px; margin: 0; font-family: inherit;">
+                <p style="margin: 0 0 8px 0; padding: 0; font-size: 16px; font-family: inherit; text-align: center;">
+                    Please ⭐️ us on GitHub!
+                </p>
+                <a href="https://github.com/RAGnTeX/RAGnTeX" target="_blank" style="
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    padding: 12px;
+                    background-color: #4c1d95;
+                    color: white;
+                    font-weight: 600;
+                    font-family: inherit;
+                    border-radius: 0;
+                    text-decoration: none;
+                    user-select: none;
+                    cursor: pointer;
+                    gap: 8px;
+                    transition: background-color 0.2s ease-in-out;
+                " 
+                onmouseover="this.style.backgroundColor='#6d28d9';" 
+                onmouseout="this.style.backgroundColor='#4c1d95';"
+                >
+                    <img src="{github_base64}" alt="GitHub" style="height: 20px; margin: 0;">
+                    RAG'n'TeX
+                </a>
+                </div>
+            """)
 
-            gr.Markdown("## 🎉 Final Presentation")
-            pdf_output = gr.File(label="Download/View Presentation", interactive=False, elem_id="download-box")
-            pdf_output_viewer = gr.HTML(label="Presentation Preview")
-            trace_id_state = gr.State("")
+        with gr.Column(scale=1):      
+            gr.Markdown(
+                "#### Authors:\n"
+                "- 👩🏻‍💻 **[Anna Ershova](https://github.com/AnnaErsh)**\n"
+                "- 👨🏼‍🔬 **[Kajetan Niewczas](https://github.com/KajetanNiewczas)**\n"
+            )
+            gr.Markdown("📄 Licensed under the [MIT License](https://opensource.org/licenses/MIT)")
+            
 
     upload_button.click(
         fn=upload_and_update_list,
