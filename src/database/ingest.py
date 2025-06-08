@@ -19,13 +19,13 @@ def ingest_files_to_db(pdf_files) -> None:
     # Get all the existing entries and extract the known filenames
     all_entries = db.get(include=["metadatas"])
     existing_pdfs = set(
-        meta.get("source_pdf")
+        meta.get("pdf_path")
         for meta in all_entries["metadatas"]
-        if meta.get("source_pdf")
+        if meta.get("pdf_path")
     )
 
     # Filter out already ingested PDFs
-    new_pdfs = [file for file in pdf_files if Path(file).name not in existing_pdfs]
+    new_pdfs = [file for file in pdf_files if file not in existing_pdfs]
 
     if not new_pdfs:
         LOGGER.info("📂 No new PDFs to ingest. Skipping ingestion.")
@@ -33,9 +33,8 @@ def ingest_files_to_db(pdf_files) -> None:
 
     # Process new files only
     documents, metadatas = process_documents(new_pdfs)
-    # print("ingest metadatas", metadatas)
 
-    LOGGER.info("➕ Adding %s new PDFs to the database...", len(new_pdfs))
+    LOGGER.info("➕ Adding %d new PDFs to the database...", len(new_pdfs))
     if documents:
         db.add(
             documents=documents,
