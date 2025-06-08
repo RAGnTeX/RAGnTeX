@@ -1,7 +1,7 @@
 """Ingest module for adding new PDF files to the database."""
 
 from pathlib import Path
-from langfuse.decorators import langfuse_context, observe
+from langfuse.decorators import observe
 
 from .database import db
 from ..telemetry import Logger
@@ -16,7 +16,6 @@ def ingest_files_to_db(pdf_files) -> None:
     Args:
         pdf_files (list): List of PDF files to be ingested.
     """
-    print("pdf_files", pdf_files)
     # Get all the existing entries and extract the known filenames
     all_entries = db.get(include=["metadatas"])
     existing_pdfs = set(
