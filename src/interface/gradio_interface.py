@@ -29,7 +29,7 @@ def generate_iframe(file_path):
             base64_pdf = base64.b64encode(f.read()).decode("utf-8")
         # pdf_display = f'''
         #     <div style="position:relative; width:100%; padding-top:76.5%;">
-        #     <iframe src="data:application/pdf;base64,{base64_pdf}#view=FitH" 
+        #     <iframe src="data:application/pdf;base64,{base64_pdf}#view=FitH"
         #     style="position:absolute; top:0; left:0; width:100%; height:100%; border:none;">
         #     </iframe></div>
         # '''
@@ -223,7 +223,6 @@ with gr.Blocks(theme=theme, js=js_func) as demo:
             gr.Markdown("## 🎉 Final Presentation")
             pdf_output = gr.File(label="Download/View Presentation")
             pdf_output_viewer = gr.HTML(label="Presentation Preview")
-            trace_id_state = gr.State("")
 
     upload_button.click(
         fn=upload_and_update_list,
@@ -231,6 +230,7 @@ with gr.Blocks(theme=theme, js=js_func) as demo:
         outputs=[upload_output, uploaded_files_state],
     )
 
+    trace_id_state = gr.State("")
     submit_topic_button.click(
         fn=generate_presentation,
         inputs=[
