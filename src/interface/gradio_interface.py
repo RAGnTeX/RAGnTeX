@@ -3,7 +3,7 @@
 import gradio as gr
 from .upload_files import upload_files
 from .download_files import download_files
-from ..services import generate_presentation
+from ..generator import generate_presentation
 from ..telemetry import submit_feedback
 import base64
 
@@ -321,7 +321,6 @@ with gr.Blocks(theme=theme, js=js_func) as demo:
             presentation_theme_state,
             color_theme_state,
             topic_input,
-            uploaded_files_state,
         ],
         outputs=[compilation_status, trace_id_state, presentation_folder_state],
     )
