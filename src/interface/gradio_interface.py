@@ -2,6 +2,7 @@
 
 import gradio as gr
 from .upload_files import upload_files
+from .download_files import download_files
 from ..services import generate_presentation
 from ..telemetry import submit_feedback
 import base64
@@ -21,7 +22,8 @@ def upload_and_update_list(files: list, uploaded_list) -> tuple[str, list[str]]:
     return status, updated_list
 
 
-def generate_iframe(file_path):
+def generate_iframe(folder_path):
+    file_path = f"{folder_path}/presentation.pdf"
     if not file_path:
         return ""
     else:
@@ -76,14 +78,28 @@ image_base64 = encode_image("gfx/long_logo.png")
 
 with gr.Blocks(theme=theme, js=js_func) as demo:
     uploaded_files_state = gr.State([])
+    presentation_folder_state = gr.State("")
+
+    # Mess with the download-box
+    gr.HTML(
+        """
+        <style>
+        #download-box svg.feather-file {
+            display: none !important;
+        }
+        </style>
+        """,
+        elem_id="custom-style-injection",
+        visible=False
+    )
+
 
     gr.Markdown(
         '<h1 style="text-align:center;">AI-powered LaTeX Presentation Generator</h1>'
     )
     with gr.Row():
         with gr.Column(scale=1):
-            gr.HTML(
-                f"""
+            gr.HTML(f"""
                 <div style="text-align:center;">
                 <img src="{image_base64}" style="max-width: 100%; height: auto;" />
                 </div>
@@ -216,12 +232,12 @@ with gr.Blocks(theme=theme, js=js_func) as demo:
             )
 
             gr.Markdown("## 📝 Presentation Processing")
-            topic_output = gr.Textbox(
+            compilation_status = gr.Textbox(
                 label="Compilation Status", lines=1, interactive=False
             )
 
             gr.Markdown("## 🎉 Final Presentation")
-            pdf_output = gr.File(label="Download/View Presentation", interactive=False)
+            pdf_output = gr.File(label="Download/View Presentation", interactive=False, elem_id="download-box")
             pdf_output_viewer = gr.HTML(label="Presentation Preview")
             trace_id_state = gr.State("")
 
@@ -239,12 +255,18 @@ with gr.Blocks(theme=theme, js=js_func) as demo:
             topic_input,
             uploaded_files_state,
         ],
-        outputs=[topic_output, pdf_output, pdf_output_viewer, trace_id_state],
+        outputs=[compilation_status, trace_id_state, presentation_folder_state],
+    )
+
+    compilation_status.change(
+        fn=download_files,
+        inputs=presentation_folder_state,
+        outputs=pdf_output,
     )
 
     pdf_output.change(
         fn=generate_iframe,
-        inputs=pdf_output,
+        inputs=presentation_folder_state,
         outputs=pdf_output_viewer,
     )
 
