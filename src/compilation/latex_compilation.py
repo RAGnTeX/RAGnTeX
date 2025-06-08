@@ -2,11 +2,14 @@
 
 import os
 import subprocess
-from ..telemetry import Logger, traced_block
+from langfuse.decorators import langfuse_context, observe
+
+from ..telemetry import Logger
 
 LOGGER = Logger.get_logger()
 
 
+@observe(name="🧱 compile_presentation")
 def compile_presentation(latex_code, work_dir) -> None:
     """Compile LaTeX code into a PDF presentation.
     Args:
@@ -34,35 +37,37 @@ def compile_presentation(latex_code, work_dir) -> None:
     # Compile with pdflatex (using subprocess instead of `!`)
     os.chdir(work_dir)  # Change working directory
 
-    with traced_block("🧱 compile_presentation") as span:
-        try:
-            # Run pdflatex twice to ensure proper slide enumeration
-            subprocess.run(
-                ["pdflatex", "-interaction=nonstopmode", "presentation.tex"],
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-            subprocess.run(
-                ["pdflatex", "-interaction=nonstopmode", "presentation.tex"],
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
+    try:
+        # Run pdflatex twice to ensure proper slide enumeration
+        subprocess.run(
+            ["pdflatex", "-interaction=nonstopmode", "presentation.tex"],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        subprocess.run(
+            ["pdflatex", "-interaction=nonstopmode", "presentation.tex"],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
 
-        except subprocess.CalledProcessError as e:
-            # Handle error in case of failed LaTeX compilation
-            span.set_attribute("pdf.success", False)
-            span.set_attribute("pdf.error_log", e.stderr.decode())
-            span.record_exception(e)
-            LOGGER.error(
-                "❌ PDF generation failed. Here's the log: %s", e.stderr.decode()
+    except subprocess.CalledProcessError as e:
+        # Handle error in case of failed LaTeX compilation
+        langfuse_context.update_current_observation(
+            output={"pdf.success": False, "pdf.error_log": e.stderr.decode()}
+        )
+        LOGGER.error("❌ PDF generation failed. Here's the log: %s", e.stderr.decode())
+    else:
+        # Check for PDF output
+        if not os.path.exists("presentation.pdf"):
+            langfuse_context.update_current_observation(
+                output={
+                    "pdf.success": False,
+                    "pdf.error_log": "❌ PDF generation failed. No PDF file found.",
+                }
             )
+            LOGGER.error("❌ PDF generation failed. No PDF file found.")
         else:
-            # Check for PDF output
-            if not os.path.exists("presentation.pdf"):
-                span.set_attribute("pdf.success", False)
-                LOGGER.error("❌ PDF generation failed. No PDF file found.")
-            else:
-                span.set_attribute("pdf.success", True)
-                LOGGER.info("💾 PDF generated successfully in: %s", work_dir)
+            langfuse_context.update_current_observation(output={"pdf.success": True})
+            LOGGER.info("💾 PDF generated successfully in: %s", work_dir)

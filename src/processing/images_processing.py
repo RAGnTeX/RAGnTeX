@@ -7,8 +7,9 @@ import json
 from collections import defaultdict
 import fitz
 from rtree import index
+from langfuse.decorators import langfuse_context, observe
 
-from ..telemetry import Logger, traced_block
+from ..telemetry import Logger
 
 LOGGER = Logger.get_logger()
 
@@ -379,7 +380,8 @@ def save_pdf_figures(pdf_path: str, req_figs: list, figures_dir: str):
     return True
 
 
-def find_used_fgx(answer, work_dir: str, metadatas: list):
+@observe(name="🔍 find_used_gfx")
+def find_used_gfx(answer, work_dir: str, metadatas: list):
     """Finds and saves the figures used in the LLM output to the gfx directory
     where the presentation will be compiled.
     Args:
@@ -387,45 +389,47 @@ def find_used_fgx(answer, work_dir: str, metadatas: list):
         work_dir (str): The working directory where the presentation will be compiled.
         metadatas (list): List of metadata dictionaries containing PDF paths.
     """
-    with traced_block("👀 find_used_fgx") as span:
-        graphics_dir = os.path.join(work_dir, "gfx")
-        os.makedirs(graphics_dir, exist_ok=True)
-        LOGGER.info("🌄 Images will be saved to: %s", graphics_dir)
+    graphics_dir = os.path.join(work_dir, "gfx")
+    os.makedirs(graphics_dir, exist_ok=True)
+    LOGGER.info("🌄 Images will be saved to: %s", graphics_dir)
 
-        # Find images, which are used in the presentation
-        pattern_img = re.compile(
-            r"doc(?P<doc>[a-zA-Z0-9_]+)_page(?P<page>\d+)_img(?P<img>\d+)_hash(?P<hash>[a-fA-F0-9]{8})\.png"
-        )
-        matches_img = pattern_img.finditer(answer.text)
+    # Find images, which are used in the presentation
+    pattern_img = re.compile(
+        r"doc(?P<doc>[a-zA-Z0-9_]+)_page(?P<page>\d+)_img(?P<img>\d+)_hash(?P<hash>[a-fA-F0-9]{8})\.png"
+    )
+    matches_img = pattern_img.finditer(answer.text)
 
-        req_imgs = []
-        for match in matches_img:
-            req_img = {
-                "doc": match.group("doc"),
-                "page": int(match.group("page")),
-                "img": int(match.group("img")),
-                "hash": match.group("hash"),
-            }
-            print("matches_img = ", match.group("doc"))
-            req_imgs.append(req_img)
+    req_imgs = []
+    for match in matches_img:
+        req_img = {
+            "doc": match.group("doc"),
+            "page": int(match.group("page")),
+            "img": int(match.group("img")),
+            "hash": match.group("hash"),
+        }
+        print("matches_img = ", match.group("doc"))
+        req_imgs.append(req_img)
 
-        # Find figures, which are used in the presentation
-        pattern_fig = re.compile(
-            r"doc(?P<doc>[a-zA-Z0-9_]+)_page(?P<page>\d+)_fig(?P<fig>\d+)_hash(?P<hash>[a-fA-F0-9]{8})\.png"
-        )
-        matches_fig = pattern_fig.finditer(answer.text)
-        req_figs = []
-        for match in matches_fig:
-            req_fig = {
-                "doc": match.group("doc"),
-                "page": int(match.group("page")),
-                "fig": int(match.group("fig")),
-                "hash": match.group("hash"),
-            }
-            print("matches_fig = ", match.group("doc"))
-            req_figs.append(req_fig)
-        span.set_attribute("output.req_figs", json.dumps(req_figs))
-        # Save the required graphics
-        for metadata in metadatas:
-            save_pdf_images(metadata["pdf_path"], req_imgs, graphics_dir)
-            save_pdf_figures(metadata["pdf_path"], req_figs, graphics_dir)
+    # Find figures, which are used in the presentation
+    pattern_fig = re.compile(
+        r"doc(?P<doc>[a-zA-Z0-9_]+)_page(?P<page>\d+)_fig(?P<fig>\d+)_hash(?P<hash>[a-fA-F0-9]{8})\.png"
+    )
+    matches_fig = pattern_fig.finditer(answer.text)
+    req_figs = []
+    for match in matches_fig:
+        req_fig = {
+            "doc": match.group("doc"),
+            "page": int(match.group("page")),
+            "fig": int(match.group("fig")),
+            "hash": match.group("hash"),
+        }
+        print("matches_fig = ", match.group("doc"))
+        req_figs.append(req_fig)
+    # span.set_attribute("output.req_figs", json.dumps(req_figs))
+    langfuse_context.update_current_observation(
+        output={"output.req_figs": json.dumps(req_figs)}
+    )
+    # Save the required graphics
+    for metadata in metadatas:
+        save_pdf_images(metadata["pdf_path"], req_imgs, graphics_dir)
+        save_pdf_figures(metadata["pdf_path"], req_figs, graphics_dir)

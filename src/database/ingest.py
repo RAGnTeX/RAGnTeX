@@ -1,6 +1,8 @@
 """Ingest module for adding new PDF files to the database."""
 
 from pathlib import Path
+from langfuse.decorators import langfuse_context, observe
+
 from .database import db
 from ..telemetry import Logger
 from ..processing import process_documents
@@ -8,6 +10,7 @@ from ..processing import process_documents
 LOGGER = Logger.get_logger()
 
 
+@observe(name="𝌊 ingest_files_to_db")
 def ingest_files_to_db(pdf_files) -> None:
     """Add new files to the database if they are not yet there.
     Args:
