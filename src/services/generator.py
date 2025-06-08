@@ -27,8 +27,8 @@ def generate_presentation(theme, color, topic, uploaded_files) -> tuple[str, str
     Returns:
         tuple: A 3-element tuple:
             - str: Success message.
-            - str: Path to the generated presentation.
-            - str: Placeholder for the output viewer.
+            - str: Trace ID for telemetry purposes.
+            - str: Path to the presentation folder.
     """
 
     trace_id = langfuse_context.get_current_trace_id()
@@ -61,6 +61,6 @@ def generate_presentation(theme, color, topic, uploaded_files) -> tuple[str, str
     find_used_gfx(answer, work_dir, metadatas)
     compile_presentation(answer.text, work_dir)
 
-    delete_uploaded_files(uploaded_files)
-    output_path = Path(work_dir + "/presentation.pdf")
-    return "Presentation generated successfully!", str(output_path), "", trace_id
+        delete_uploaded_files(uploaded_files)
+
+        return "Presentation generated successfully!", trace_id, work_dir
