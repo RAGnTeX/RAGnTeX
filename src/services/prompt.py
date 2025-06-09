@@ -123,3 +123,75 @@ def get_prompt(
     (when a two-column layout is not suitable).\n\n"""
 
     return prompt
+
+
+def get_prompt_json() -> str:
+    """
+    JSON-based prompt for structured LLM output.
+    Returns:
+        str: The JSON prompt string for generating a structured presentation.
+    """
+    return """
+You are a presentation assistant that creates clear, concise, and engaging presentation structures in JSON format.
+
+You must output only a **valid JSON object** with the following fields:
+
+- "title": Title of the presentation.
+- "author": Set to "AI-generated".
+- "slides": A list of slides. Each slide is an object with:
+
+    Required:
+    - "type": One of the following slide types:
+        - "title" (for the title page)
+        - "introduction" (slide introducing the topic)
+        - "core_idea" (content slide with an optional image)
+        - "content_format": One of:
+            - "itemize" (for bullet points)
+            - "text" (for plain text content)
+        - "content": A list of bullet points (1–3) or plain text for the slides.
+        - "summary" (recap slide)
+
+    Conditionally required:
+    - "title": Required only for "core_idea" slides (string).
+
+    For "core_idea" slides:
+    - "layout": One of:
+        - "text_only"
+        - "two_column"
+        - "single_image"
+    - "image": Optional object, **required only if layout is "two_column" or "single_image"**, with:
+        - "path": Exact image path from a predefined list.
+        - "caption": Image caption text. If "None", do not use the image.
+        - "orientation": One of "horizontal", "vertical", or "square". Take it from the image metadata.
+
+**Rules:**
+- Include a slide of type "title".
+- Include exactly one "introduction" and one "summary" slide.
+- Include 2–4 "core_idea" slides.
+- Use **at least one image**.
+- Include images in **at least half of the core idea slides**.
+- Use:
+    - "two_column" layout for **vertical** or **square** images.
+    - "single_image" layout for **horizontal** images.
+- Do not use any image with caption `"None"`.
+- Do not invent or modify the image paths.
+
+Return only the JSON object. Do not include any explanations, LaTeX, or Markdown.
+"""
+
+
+def build_prompt(documents, metadatas) -> str:
+    """
+    Build the prompt for the LLM based on the provided documents and metadata.
+    Args:
+        documents (list): List of document passages.
+        metadatas (list): List of metadata dictionaries corresponding to the documents.
+    Returns:
+        str: The complete prompt string ready for LLM input.
+    """
+    prompt = get_prompt_json()
+    for passage, metas in zip(documents, metadatas):
+        passage_oneline = passage.replace("\n", " ")
+        prompt += f"PASSAGE: {passage_oneline}\n"
+        prompt += f"IMAGES: {metas['images_passage']}\n"
+    return prompt
