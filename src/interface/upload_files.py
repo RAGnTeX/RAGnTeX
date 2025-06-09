@@ -1,9 +1,10 @@
 """Module to handle file uploads via UI."""
 
-from pathlib import Path
 import shutil
-from ..telemetry.logging_utils import Logger
+from pathlib import Path
+
 from ..database import ingest_files_to_db
+from ..telemetry.logging_utils import Logger
 
 LOGGER = Logger.get_logger()
 

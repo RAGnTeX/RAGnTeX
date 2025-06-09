@@ -1,14 +1,15 @@
 """Module handling images exrtraction and processing from the uploaded PDF documents."""
 
-import re
-import os
 import hashlib
 import json
-from typing import Optional
+import os
+import re
 from collections import defaultdict
+from typing import Optional
+
 import fitz
-from rtree import index
 from langfuse.decorators import langfuse_context, observe
+from rtree import index
 
 from ..telemetry import Logger
 

@@ -1,8 +1,8 @@
 """Telemetry utilities for Langfuse integration and OpenTelemetry tracing."""
 
 import os
-
 from functools import lru_cache
+
 from langfuse import Langfuse
 from langfuse.decorators import observe
 
