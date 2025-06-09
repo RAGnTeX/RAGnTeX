@@ -46,7 +46,7 @@ def extract_pdf_content(pdf_path: str) -> tuple[str, list[dict], dict]:
 
 
 @observe(name="📊 process_documents")
-def process_documents(pdf_files) -> tuple[list[str], list[dict]]:
+def process_documents(pdf_files) -> tuple[list[str], list[dict], list[str]]:
     """Process a list of PDF files to extract text and images metadata.
     Args:
         pdf_files (list): List of paths to PDF files.
@@ -57,9 +57,22 @@ def process_documents(pdf_files) -> tuple[list[str], list[dict]]:
     """
     documents = []
     metadatas = []
+    failed = []
 
     for pdf_path in pdf_files:
-        text, imgs, metas = extract_pdf_content(pdf_path)
+        try:
+            text, imgs, metas = extract_pdf_content(pdf_path)
+        except Exception as e:
+            LOGGER.error("❌ Error processing %s", pdf_path, exc_info=e)
+            langfuse_context.update_current_observation(
+                output={
+                    "output.images_passage": None,
+                    "output.num_images": None,
+                    "output.pdf_path": pdf_path,
+                }
+            )
+            failed.append(pdf_path)
+            continue
 
         documents.append(text)
 
@@ -105,7 +118,7 @@ def process_documents(pdf_files) -> tuple[list[str], list[dict]]:
         )
         metadatas.append(fixed_metadata)
 
-    return documents, metadatas
+    return documents, metadatas, failed
 
 
 @observe(name="🗑️ delete_uploaded_files")
