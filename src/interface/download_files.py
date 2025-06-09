@@ -1,3 +1,5 @@
+"""Helper module to download files as a zip archive via UI."""
+
 import zipfile
 from pathlib import Path
 from ..telemetry.logging_utils import Logger
@@ -10,12 +12,12 @@ def download_files(folder_path) -> str:
 
     if not folder_path:
         return "No folder path provided."
-    
+
     folder = Path(folder_path)
     zip_path = Path.cwd() / "presentation.zip"
 
-    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for file in folder.rglob('*'):
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for file in folder.rglob("*"):
             if file.is_file() and file != zip_path:
                 arcname = Path("presentation") / file.relative_to(folder)
                 zipf.write(file, arcname=arcname)

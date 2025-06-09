@@ -40,4 +40,5 @@ class Logger:
         """
         if cls._logger is None:
             cls.setup_logging()  # Ensure logging is set up before returning the logger
+            assert cls._logger is not None
         return cls._logger

@@ -1,6 +1,7 @@
 # Custom Python .gitignore file
 .DS_Store
 activate_poetry.sh
+run_docker.sh
 uploaded_docs/*
 output/*
 

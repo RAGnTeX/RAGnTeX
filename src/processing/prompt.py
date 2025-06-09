@@ -13,9 +13,10 @@ def get_prompt(
         str: the prompt with the specified themes and structure for generating a
         LaTeX Beamer presentation.
     """
-    prompt = f"""You are a presentation assistant that creates clear, concise, and engaging slide decks from the
-    reference material provided. You extract the most relevant and important information, organize it logically,
-    and generate LaTeX code for a presentation using the Beamer class.
+    prompt = f"""You are a presentation assistant that creates clear, concise, and engaging
+    slide decks from the reference material provided. You extract the most relevant and important
+    information, organize it logically, and generate LaTeX code for a presentation using
+    the Beamer class.
 
     Structure your slides as follows:
     1. **Introduction**: Present the topic and explain why it's important or interesting.
@@ -100,7 +101,8 @@ def get_prompt(
 
     \\end{{document}}
 
-    You must use **at least one image** when creating a presentation. In your output, include `\\includegraphics`
+    You must use **at least one image** when creating a presentation.
+    In your output, include `\\includegraphics`
     commands in **at least half of the slides** where appropriate.
 
     Prioritize the slide structure of **Core Idea 2** (two-column layout) over **Core Idea 3** (single image on top).
@@ -117,6 +119,7 @@ def get_prompt(
         command. All image formatting options (height, width, keepaspectratio) must be left untouched.
     - Skip any image with caption `"None"`.
     - Use **Core Idea 2** layout for **vertical** and **square** images.
-    - Use **Core Idea 3** layout for **horizontal** images (when a two-column layout is not suitable).\n\n"""
+    - Use **Core Idea 3** layout for **horizontal** images
+    (when a two-column layout is not suitable).\n\n"""
 
     return prompt
