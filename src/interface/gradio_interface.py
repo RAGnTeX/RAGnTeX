@@ -2,11 +2,13 @@
 """Gradio UI for the RAG'n'TeX LaTeX Presentation Generator."""
 
 import base64
+
 import gradio as gr
-from .upload_files import upload_files
-from .download_files import download_files
+
 from ..generator import generate_presentation
 from ..telemetry import submit_feedback
+from .download_files import download_files
+from .upload_files import upload_files
 
 
 def upload_and_update_list(files: list, uploaded_list) -> tuple[str, list[str]]:
