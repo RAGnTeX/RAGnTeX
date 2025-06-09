@@ -56,6 +56,12 @@ def upload_files(files: list) -> tuple[str, list[str]]:
             messages.append(f"❌ Error uploading {file_name}: {e}")
 
     if saved_paths:
-        ingest_files_to_db(saved_paths)
+        failed = ingest_files_to_db(saved_paths)
+        if failed:
+            messages.append(f"⚠️ Failed to process files: {', '.join(Path(f).name for f in failed)}")
+            LOGGER.warning("⚠️ Failed to process files: %s", ", ".join(Path(f).name for f in failed))
+        else:
+            messages.append("🛠️ All files processed successfully!")
+            LOGGER.info("🛠️ All files processed successfully!")
 
     return "\n".join(messages), saved_paths
