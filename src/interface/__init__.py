@@ -1,3 +1,6 @@
-from .gradio_interface import demo
+"""This module initializes the UI package."""
 
-__all__ = ["demo"]
+from .gradio_interface import demo
+from .upload_files import upload_files
+
+__all__ = ["upload_files", "demo"]
