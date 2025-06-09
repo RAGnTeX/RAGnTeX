@@ -46,7 +46,13 @@ def generate_iframe(folder_path) -> str:
     return pdf_display
 
 
-def encode_image(image_path):
+def encode_image(image_path) -> str:
+    """Encode an image file to a base64 data URL.
+    Args:
+        image_path (str): Path to the image file.
+    Returns:
+        str: Base64 data URL of the image.
+    """
     with open(image_path, "rb") as f:
         data = f.read()
         return f"data:image/png;base64,{base64.b64encode(data).decode()}"
