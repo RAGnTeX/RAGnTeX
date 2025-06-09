@@ -25,7 +25,7 @@ def compile_presentation(latex_code, work_dir) -> None:
 
     # Save LaTeX code to file
     tex_file = os.path.join(work_dir, "presentation.tex")
-    with open(tex_file, "w") as f:
+    with open(tex_file, "w", encoding="utf-8") as f:
         f.write(latex_code)
 
     LOGGER.info("📄 Files in the directory: %s", work_dir)

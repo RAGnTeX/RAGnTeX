@@ -21,8 +21,8 @@ def upload_files(files: list) -> tuple[str, list[str]]:
 
     current_file = Path(__file__).resolve()
     project_root = current_file.parents[2]  # utils → src → PROJECT ROOT
-    UPLOAD_DIR = project_root / "uploaded_docs"
-    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    upload_dir = project_root / "uploaded_docs"
+    upload_dir.mkdir(parents=True, exist_ok=True)
 
     messages = []
     saved_paths = []
@@ -31,7 +31,7 @@ def upload_files(files: list) -> tuple[str, list[str]]:
         try:
             temp_path = Path(file.name)
             file_name = temp_path.name.replace(" ", "_")
-            target_path = UPLOAD_DIR / file_name
+            target_path = upload_dir / file_name
 
             if target_path.exists():
                 messages.append(f"⚠️ File already exists: {file_name}")
@@ -40,14 +40,14 @@ def upload_files(files: list) -> tuple[str, list[str]]:
             if not temp_path.exists():
                 messages.append(f"❌ File not found: {file_name}")
                 continue
-            else:
-                shutil.move(str(temp_path), str(target_path))
-                messages.append(f"✅ Uploaded new file: {file_name}")
-                LOGGER.info("📤 Uploaded file %s to %s", file_name, UPLOAD_DIR)
+
+            shutil.move(str(temp_path), str(target_path))
+            messages.append(f"✅ Uploaded new file: {file_name}")
+            LOGGER.info("📤 Uploaded file %s to %s", file_name, upload_dir)
 
             saved_paths.append(str(target_path))
 
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, shutil.Error, OSError) as e:
             LOGGER.error("❌ Error uploading %s", file_name, exc_info=e)
             messages.append(f"❌ Error uploading {file_name}: {e}")
 

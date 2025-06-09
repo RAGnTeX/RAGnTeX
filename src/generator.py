@@ -1,6 +1,5 @@
 """Module to put it all together and manage the generation of a presentation."""
 
-from pathlib import Path
 from langfuse.decorators import langfuse_context, observe
 
 # from datetime import datetime
@@ -9,7 +8,7 @@ from src.telemetry import Logger
 from src.processing import get_prompt, create_output_folder
 from src.services import client
 from src.compilation import compile_presentation
-from src.processing import delete_uploaded_files, find_used_gfx
+from src.processing import find_used_gfx
 
 
 LOGGER = Logger.get_logger()
