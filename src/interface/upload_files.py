@@ -1,5 +1,6 @@
 """Module to handle file uploads via UI."""
 
+import re
 import shutil
 from pathlib import Path
 
@@ -31,7 +32,10 @@ def upload_files(files: list) -> tuple[str, list[str]]:
     for file in files:
         try:
             temp_path = Path(file.name)
-            file_name = temp_path.name.replace(" ", "_")
+            # Prepare the safe file name
+            safe_name = re.sub(r"[^a-zA-Z0-9_]", "_", temp_path.stem)
+            safe_name = re.sub(r"_+", "_", safe_name)
+            file_name = f"{safe_name}{temp_path.suffix}"
             target_path = upload_dir / file_name
 
             if target_path.exists():
@@ -53,6 +57,16 @@ def upload_files(files: list) -> tuple[str, list[str]]:
             messages.append(f"❌ Error uploading {file_name}: {e}")
 
     if saved_paths:
-        ingest_files_to_db(saved_paths)
+        failed = ingest_files_to_db(saved_paths)
+        if failed:
+            messages.append(
+                f"⚠️ Failed to process files: {', '.join(Path(f).name for f in failed)}"
+            )
+            LOGGER.warning(
+                "⚠️ Failed to process files: %s", ", ".join(Path(f).name for f in failed)
+            )
+        else:
+            messages.append("🛠️ All files processed successfully!")
+            LOGGER.info("🛠️ All files processed successfully!")
 
     return "\n".join(messages), saved_paths

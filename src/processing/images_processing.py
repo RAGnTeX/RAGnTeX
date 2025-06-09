@@ -106,7 +106,11 @@ def extract_images(pdf, doc, page, page_num) -> list[dict]:
             # Get the image ratio
             width = image_bbox.width
             height = image_bbox.height
-            ratio = width / height if height != 0 else 2
+            ratio = width / height if height != 0 else 20
+
+            # Remove images with weird ratios
+            if ratio < 0.1 or ratio > 10:
+                continue
 
             # Classify the image based on the ratio
             if ratio >= 1.5:
@@ -279,7 +283,7 @@ def extract_vector(pdf, page, page_num) -> list[dict]:
             - "hash": The MD5 hash of the figure content.
     """
     # pylint: disable=invalid-name
-    MAX_DRAWINGS = 1000
+    MAX_DRAWINGS = 800
     MIN_SIZE = 0.05
     MAX_SIZE = 0.30
     THRESHOLD = 5
@@ -324,7 +328,11 @@ def extract_vector(pdf, page, page_num) -> list[dict]:
             )
 
             # Get the figure ratio
-            ratio = width / height if height != 0 else 2
+            ratio = width / height if height != 0 else 20
+
+            # Remove images with weird ratios
+            if ratio < 0.1 or ratio > 10:
+                continue
 
             # Classify the image based on the ratio
             if ratio >= 1.5:
@@ -503,7 +511,6 @@ def find_used_gfx(answer, work_dir: str, metadatas: list) -> None:
             "img": int(match.group("img")),
             "hash": match.group("hash"),
         }
-        print("matches_img = ", match.group("doc"))
         req_imgs.append(req_img)
 
     # Find figures, which are used in the presentation
@@ -519,7 +526,6 @@ def find_used_gfx(answer, work_dir: str, metadatas: list) -> None:
             "fig": int(match.group("fig")),
             "hash": match.group("hash"),
         }
-        print("matches_fig = ", match.group("doc"))
         req_figs.append(req_fig)
     # span.set_attribute("output.req_figs", json.dumps(req_figs))
     langfuse_context.update_current_observation(
