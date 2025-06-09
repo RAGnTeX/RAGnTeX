@@ -34,7 +34,7 @@ def ingest_files_to_db(pdf_files) -> list[str]:
 
     if not new_pdfs:
         LOGGER.info("📂 No new PDFs to ingest. Skipping ingestion.")
-        return
+        return []
 
     # Process new files only
     documents, metadatas, failed = process_documents(new_pdfs)
