@@ -12,7 +12,7 @@ LOGGER = Logger.get_logger()
 
 
 @observe(name="𝌊 ingest_files_to_db")
-def ingest_files_to_db(pdf_files) -> None:
+def ingest_files_to_db(pdf_files) -> list[str]:
     """Add new files to the database if they are not yet there.
     Args:
         pdf_files (list): List of PDF files to be ingested.
@@ -37,7 +37,7 @@ def ingest_files_to_db(pdf_files) -> None:
         return
 
     # Process new files only
-    documents, metadatas = process_documents(new_pdfs)
+    documents, metadatas, failed = process_documents(new_pdfs)
 
     LOGGER.info("➕ Adding %d new PDFs to the database...", len(new_pdfs))
     if documents:
@@ -47,6 +47,8 @@ def ingest_files_to_db(pdf_files) -> None:
             metadatas=metadatas,
         )
     LOGGER.info("✅ Documents ingested successfully.")
+
+    return failed
 
 
 Metadata = Mapping[str, Union[str, int, float, bool]]

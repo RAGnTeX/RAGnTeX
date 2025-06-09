@@ -156,8 +156,8 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
             )
             gr.HTML(
                 f"""
-                    <div style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 12px; margin-bottom: 12px;">
-                        <p style="font-size: 16px;">Please ⭐️ us on GitHub!</p>
+                    <div style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 20px; margin-bottom: 12px;">
+                        <p style="font-size: 16px; line-height: 1; margin: 0;">Please ⭐️ us on GitHub!</p>
                         <a href="https://github.com/RAGnTeX/RAGnTeX" target="_blank" style="
                             display: inline-flex;
                             align-items: center;
@@ -166,13 +166,16 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
                             background-color: #4c1d95;
                             color: white;
                             font-weight: 600;
-                            border-radius: 8px;
+                            font-size: 16px;
+                            line-height: 1;
+                            border-radius: 0px;
                             text-decoration: none;
                             gap: 8px;
                             transition: background-color 0.2s ease-in-out;
+                            border: 2px solid transparent;
                             "
-                            onmouseover="this.style.backgroundColor='#6d28d9';"
-                            onmouseout="this.style.backgroundColor='#4c1d95';"
+                            onmouseover="this.style.backgroundColor='#6d28d9'; this.style.border='2px solid #686868';"
+                            onmouseout="this.style.backgroundColor='#4c1d95'; this.style.border='2px solid transparent';"
                         >
                             <img src="{github_base64}" alt="GitHub" style="height: 20px;">
                             RAG'n'TeX
