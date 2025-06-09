@@ -1,8 +1,10 @@
+"""Database module for user-uploaded files."""
+
+import chromadb
+from chromadb import Documents, EmbeddingFunction, Embeddings
+from google import genai
 from google.api_core import retry
 from google.genai import types
-from google import genai
-from chromadb import Documents, EmbeddingFunction, Embeddings
-import chromadb
 
 from ..services import client
 
@@ -11,11 +13,13 @@ is_retriable = lambda e: (isinstance(e, genai.errors.APIError) and e.code in {42
 
 
 class GeminiEmbeddingFunction(EmbeddingFunction):
+    """A class to handle retrieval embedding functions using Google Gemini API."""
+
     def __init__(self):
         self.document_mode = True
 
     @retry.Retry(predicate=is_retriable)
-    def __call__(self, input: Documents) -> Embeddings:
+    def __call__(self, inputs: Documents) -> Embeddings:
         if self.document_mode:
             embedding_task = "retrieval_document"
         else:
@@ -23,7 +27,7 @@ class GeminiEmbeddingFunction(EmbeddingFunction):
 
         response = client.models.embed_content(
             model="models/text-embedding-004",
-            contents=input,
+            contents=inputs,
             config=types.EmbedContentConfig(
                 task_type=embedding_task,
             ),
