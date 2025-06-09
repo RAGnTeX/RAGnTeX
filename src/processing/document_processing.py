@@ -2,7 +2,6 @@
 
 import re
 import os
-import json
 from pathlib import Path
 import fitz
 from langfuse.decorators import langfuse_context, observe
@@ -14,7 +13,7 @@ LOGGER = Logger.get_logger()
 
 
 @observe(name="⚙️ extract_pdf_content")
-def extract_pdf_content(pdf_path: str):
+def extract_pdf_content(pdf_path: str) -> tuple[str, list[dict], dict]:
     """Extract text and images from a PDF file.
     Args:
         pdf_path (str): Path to the PDF file.
@@ -37,7 +36,7 @@ def extract_pdf_content(pdf_path: str):
         figs += extract_images(pdf, doc, page, page_num)
 
         # Extract vector graphics
-        figs += extract_vector(pdf, doc, page, page_num)
+        figs += extract_vector(pdf, page, page_num)
 
     # Format the metadata
     metas = {"num_images": len(figs), "pdf_path": pdf_path}
@@ -47,7 +46,15 @@ def extract_pdf_content(pdf_path: str):
 
 
 @observe(name="📊 process_documents")
-def process_documents(pdf_files):
+def process_documents(pdf_files) -> tuple[list[str], list[dict]]:
+    """Process a list of PDF files to extract text and images metadata.
+    Args:
+        pdf_files (list): List of paths to PDF files.
+    Returns:
+        tuple: A 2-element tuple:
+            - list[str]: List of extracted text from each PDF.
+            - list[dict]: List of metadata dictionaries for each PDF.
+    """
     documents = []
     metadatas = []
 
@@ -58,12 +65,10 @@ def process_documents(pdf_files):
 
         # Format images
         images_info = []
-        for i, img in enumerate(imgs, start=1):
+        for _, img in enumerate(imgs, start=1):
             caption = img.get("caption")
             caption_str = str(caption) if caption is not None else ""
-            img_name = img["name"]
-            img_ratio = img["ratio"]
-            full_path = f"gfx/{img_name}"
+            full_path = f"gfx/{img['name']}"
 
             cleaned_caption = re.sub(
                 r"^(fig(?:ure)?\.?\s*\d+\.\s*)",
@@ -74,7 +79,11 @@ def process_documents(pdf_files):
             caption = cleaned_caption if cleaned_caption else "None"
 
             images_info.append(
-                f'{{"path": "{full_path}", "caption": "{caption}", "orientation": "{img_ratio}"}}'
+                (
+                    f'{{"path": "{full_path}", '
+                    f'"caption": "{caption}", '
+                    f'"orientation": "{img["ratio"]}"}}'
+                )
             )
 
         images_passage = "\n".join(images_info)
@@ -99,8 +108,12 @@ def process_documents(pdf_files):
     return documents, metadatas
 
 
-def delete_uploaded_files(uploaded_files):
-    """Delete uploaded files after processing."""
+@observe(name="🗑️ delete_uploaded_files")
+def delete_uploaded_files(uploaded_files) -> None:
+    """Delete uploaded files after processing.
+    Args:
+        uploaded_files (list): List of file paths to be deleted.
+    """
     for file in uploaded_files:
         try:
             path = Path(file)
@@ -110,5 +123,5 @@ def delete_uploaded_files(uploaded_files):
             else:
                 LOGGER.warning(f"File not found for deletion: {file}")
             LOGGER.info("🧹 Cleaned up uploaded files.")
-        except Exception as e:
+        except (OSError, PermissionError) as e:
             LOGGER.warning(f"Failed to delete {file}", exc_info=e)

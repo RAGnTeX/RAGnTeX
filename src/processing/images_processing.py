@@ -4,6 +4,7 @@ import re
 import os
 import hashlib
 import json
+from typing import Optional
 from collections import defaultdict
 import fitz
 from rtree import index
@@ -14,8 +15,16 @@ from ..telemetry import Logger
 LOGGER = Logger.get_logger()
 
 
-def find_image_caption(page, image_bbox, max_distance=100):
-    """Method to find and extract image caption based on the image bounding box."""
+def find_image_caption(page, image_bbox, max_distance=100) -> Optional[str]:
+    """Method to find and extract image caption based on the image bounding box.
+    Args:
+        page (fitz.Page): The page object from which to extract the caption.
+        image_bbox (fitz.Rect): The bounding box of the image.
+        max_distance (int): The maximum vertical distance from the image bottom to consider
+            a text block as a potential caption.
+    Returns:
+        str: The extracted caption text if found, otherwise None.
+    """
     # Get all text blocks on the page
     blocks = page.get_text("dict")["blocks"]
     image_bottom = image_bbox.y1
@@ -30,7 +39,7 @@ def find_image_caption(page, image_bbox, max_distance=100):
             continue
 
         block_bbox = block["bbox"]
-        x0, y0, x1, y1 = block_bbox
+        x0, y0, x1, _ = block_bbox
         vertical_distance = y0 - image_bottom
 
         # Merge all spans' text into one string
@@ -51,20 +60,30 @@ def find_image_caption(page, image_bbox, max_distance=100):
                 if re.match(r"^(Fig(ure)?\.?\s*\d+[:\-])", block_text, re.IGNORECASE):
                     best_match_caption = block_text
                     break
-                else:
-                    fallback_caption = block_text
-                    closest_distance = vertical_distance
+                fallback_caption = block_text
+                closest_distance = vertical_distance
 
     if best_match_caption and len(best_match_caption.strip()) > 10:
         return best_match_caption.strip()
-    elif fallback_caption and len(fallback_caption.strip()) > 10:
+    if fallback_caption and len(fallback_caption.strip()) > 10:
         return fallback_caption.strip()
-    else:
-        return None
+    return None
 
 
-def extract_images(pdf, doc, page, page_num):
-    """Extract images from a PDF page and classify them based on their aspect ratio."""
+def extract_images(pdf, doc, page, page_num) -> list[dict]:
+    """Extract images from a PDF page and classify them based on their aspect ratio.
+    Args:
+        pdf (str): The PDF filename without extension.
+        doc (fitz.Document): The PDF document object.
+        page (fitz.Page): The PDF page object.
+        page_num (int): The page number in the PDF document.
+    Returns:
+        list: A list of dictionaries containing image metadata, including:
+            - "name": The name of the image file.
+            - "caption": The caption of the image, if found.
+            - "ratio": The aspect ratio classification of the image ("horizontal", "vertical", or "square").
+            - "hash": The MD5 hash of the image content.
+    """
     images = page.get_images(full=True)
     imgs = []
     for img_index, img in enumerate(images):
@@ -86,7 +105,7 @@ def extract_images(pdf, doc, page, page_num):
             # Get the image ratio
             width = image_bbox.width
             height = image_bbox.height
-            ratio = width / height if height != 0 else None
+            ratio = width / height if height != 0 else 2
 
             # Classify the image based on the ratio
             if ratio >= 1.5:
@@ -112,7 +131,15 @@ def extract_images(pdf, doc, page, page_num):
     return imgs
 
 
-def are_bounding_boxes_close(bbox1, bbox2, threshold=50):
+def are_bounding_boxes_close(bbox1, bbox2, threshold=50) -> bool:
+    """Check if two bounding boxes are close to each other based on their edges.
+    Args:
+        bbox1 (tuple): The first bounding box as a tuple (left, top, right, bottom).
+        bbox2 (tuple): The second bounding box as a tuple (left, top, right, bottom).
+        threshold (int): The distance threshold to consider two boxes as close.
+    Returns:
+        bool: True if the bounding boxes are close, False otherwise.
+    """
     # Extracting the four edges of each bounding box
     left1, top1, right1, bottom1 = bbox1
     left2, top2, right2, bottom2 = bbox2
@@ -126,7 +153,13 @@ def are_bounding_boxes_close(bbox1, bbox2, threshold=50):
     )
 
 
-def merge_bounding_boxes(bboxes):
+def merge_bounding_boxes(bboxes) -> Optional[fitz.Rect]:
+    """Merge a list of bounding boxes into a single bounding box.
+    Args:
+        bboxes (list): A list of bounding boxes, each represented as a tuple (left, top, right, bottom).
+    Returns:
+        fitz.Rect: A single bounding box that encompasses all input bounding boxes.
+    """
     if not bboxes:
         return None
     # Start with the first bounding box
@@ -136,7 +169,14 @@ def merge_bounding_boxes(bboxes):
     return combined_bbox
 
 
-def group_bounding_boxes(bboxes, max_drawings=2000, threshold=50):
+def group_bounding_boxes(bboxes, threshold=50) -> list:
+    """Group bounding boxes that are close to each other into larger bounding boxes.
+    Args:
+        bboxes (list): A list of bounding boxes, each represented as a tuple (left, top, right, bottom).
+        threshold (int): The distance threshold to consider two boxes as close.
+    Returns:
+        list: A list of merged bounding boxes, where each box represents a group of close bounding boxes.
+    """
     # R-tree index setup
     idx = index.Index()
     for i, rect in enumerate(bboxes):
@@ -165,7 +205,7 @@ def group_bounding_boxes(bboxes, max_drawings=2000, threshold=50):
     # Find all connected components using DFS
     for i in range(len(bboxes)):
         if not visited[i]:
-            component = []
+            component = []  # type: ignore
             dfs(i, component)
             components.append(component)
 
@@ -173,7 +213,15 @@ def group_bounding_boxes(bboxes, max_drawings=2000, threshold=50):
     return [merge_bounding_boxes(group) for group in components]
 
 
-def process_large_drawing(drawings, max_drawings=1000, threshold=50):
+def process_large_drawing(drawings, max_drawings=1000, threshold=50) -> list:
+    """Process a large number of drawings by grouping them into bounding boxes.
+    Args:
+        drawings (list): A list of drawing dictionaries, each containing a "rect" key with bounding box coordinates.
+        max_drawings (int): Maximum number of drawings to process at once.
+        threshold (int): The distance threshold to consider two boxes as close.
+    Returns:
+        list: A list of merged bounding boxes, where each box represents a group of close drawings.
+    """
     bboxes = [fitz.Rect(d["rect"]) for d in drawings if d.get("rect")]
 
     if len(bboxes) < max_drawings:
@@ -192,7 +240,15 @@ def process_large_drawing(drawings, max_drawings=1000, threshold=50):
     return group_bounding_boxes(all_results, threshold=threshold)
 
 
-def find_surrounding_text(page, group, threshold=50):
+def find_surrounding_text(page, group, threshold=50) -> list:
+    """Find text blocks surrounding a given bounding box on a PDF page.
+    Args:
+        page (fitz.Page): The PDF page object.
+        group (fitz.Rect): The bounding box of the group of drawings.
+        threshold (int): The distance threshold to consider a text block as surrounding.
+    Returns:
+        list: A list of bounding boxes of surrounding text blocks.
+    """
     text_blocks = page.get_text("dict")["blocks"]
     expanded = group + (-threshold, -threshold, threshold, threshold)
     surrounding = []
@@ -208,12 +264,26 @@ def find_surrounding_text(page, group, threshold=50):
     return surrounding
 
 
-def extract_vector(pdf, doc, page, page_num):
+def extract_vector(pdf, page, page_num) -> list[dict]:
+    """Extract vector graphics from a PDF page and classify them based on their aspect ratio.
+    Args:
+        pdf (str): The PDF filename without extension.
+        page (fitz.Page): The PDF page object.
+        page_num (int): The page number in the PDF document.
+    Returns:
+        list: A list of dictionaries containing figure metadata, including:
+            - "name": The name of the figure file.
+            - "caption": The caption of the figure, if found.
+            - "ratio": The aspect ratio classification of the figure ("horizontal", "vertical", or "square").
+            - "hash": The MD5 hash of the figure content.
+    """
+    # pylint: disable=invalid-name
     MAX_DRAWINGS = 1000
     MIN_SIZE = 0.05
     MAX_SIZE = 0.30
     THRESHOLD = 5
     ZOOM = 4
+    # pylint: enable=invalid-name
 
     page_size = page.rect.width * page.rect.height
     min_size = page_size * MIN_SIZE
@@ -236,10 +306,14 @@ def extract_vector(pdf, doc, page, page_num):
             figure_bbox = group
 
         # Filter by minimal plot size
-        width = figure_bbox[2] - figure_bbox[0]
-        height = figure_bbox[3] - figure_bbox[1]
+        if figure_bbox is not None:
+            width = figure_bbox[2] - figure_bbox[0]
+            height = figure_bbox[3] - figure_bbox[1]
+        else:
+            width = height = 0
+
         area = width * height
-        if area > min_size and area < max_size:
+        if min_size < area < max_size:
             scale_mat = fitz.Matrix(ZOOM, ZOOM)
             figure_pix = page.get_pixmap(matrix=scale_mat, clip=figure_bbox)
             figure_bytes = figure_pix.tobytes("png")
@@ -249,7 +323,7 @@ def extract_vector(pdf, doc, page, page_num):
             )
 
             # Get the figure ratio
-            ratio = width / height if height != 0 else None
+            ratio = width / height if height != 0 else 2
 
             # Classify the image based on the ratio
             if ratio >= 1.5:
@@ -275,8 +349,15 @@ def extract_vector(pdf, doc, page, page_num):
     return figs
 
 
-def save_pdf_images(pdf_path: str, req_imgs: list, images_dir: str):
-    """Save images used in the presentation to the specified directory."""
+def save_pdf_images(pdf_path: str, req_imgs: list, images_dir: str) -> bool:
+    """Save images used in the presentation to the specified directory.
+    Args:
+        pdf_path (str): Path to the PDF file.
+        req_imgs (list): List of dictionaries containing required images metadata.
+        images_dir (str): Directory where the images will be saved.
+    Returns:
+        bool: True if images were saved successfully, False otherwise.
+    """
     doc = fitz.open(pdf_path)
     pdf = os.path.splitext(os.path.basename(pdf_path))[0]
 
@@ -315,7 +396,15 @@ def save_pdf_images(pdf_path: str, req_imgs: list, images_dir: str):
     return True
 
 
-def save_pdf_figures(pdf_path: str, req_figs: list, figures_dir: str):
+def save_pdf_figures(pdf_path: str, req_figs: list, figures_dir: str) -> bool:
+    """Save figures used in the presentation to the specified directory.
+    Args:
+        pdf_path (str): Path to the PDF file.
+        req_figs (list): List of dictionaries containing required figures metadata.
+        figures_dir (str): Directory where the figures will be saved.
+    Returns:
+        bool: True if figures were saved successfully, False otherwise.
+    """
     doc = fitz.open(pdf_path)
     pdf = os.path.splitext(os.path.basename(pdf_path))[0]
 
@@ -327,11 +416,13 @@ def save_pdf_figures(pdf_path: str, req_figs: list, figures_dir: str):
 
     for page_num, page in enumerate(doc):
         if page_num in pages_to_inspect:
+            # pylint: disable=invalid-name
             MAX_DRAWINGS = 1000
             MIN_SIZE = 0.05
             MAX_SIZE = 0.30
             THRESHOLD = 5
             ZOOM = 4
+            # pylint: enable=invalid-name
 
             page_size = page.rect.width * page.rect.height
             min_size = page_size * MIN_SIZE
@@ -353,10 +444,14 @@ def save_pdf_figures(pdf_path: str, req_figs: list, figures_dir: str):
                     figure_bbox = group
 
                 # Filter by minimal plot size
-                width = figure_bbox[2] - figure_bbox[0]
-                height = figure_bbox[3] - figure_bbox[1]
+                if figure_bbox is not None:
+                    width = figure_bbox[2] - figure_bbox[0]
+                    height = figure_bbox[3] - figure_bbox[1]
+                else:
+                    width = height = 0
+
                 area = width * height
-                if area > min_size and area < max_size:
+                if min_size < area < max_size:
                     scale_mat = fitz.Matrix(ZOOM, ZOOM)
                     figure_pix = page.get_pixmap(matrix=scale_mat, clip=figure_bbox)
                     figure_bytes = figure_pix.tobytes("png")
@@ -381,7 +476,7 @@ def save_pdf_figures(pdf_path: str, req_figs: list, figures_dir: str):
 
 
 @observe(name="🔍 find_used_gfx")
-def find_used_gfx(answer, work_dir: str, metadatas: list):
+def find_used_gfx(answer, work_dir: str, metadatas: list) -> None:
     """Finds and saves the figures used in the LLM output to the gfx directory
     where the presentation will be compiled.
     Args:

@@ -19,7 +19,7 @@ class GeminiEmbeddingFunction(EmbeddingFunction):
         self.document_mode = True
 
     @retry.Retry(predicate=is_retriable)
-    def __call__(self, input: Documents) -> Embeddings:
+    def __call__(self, inputs: Documents) -> Embeddings:
         if self.document_mode:
             embedding_task = "retrieval_document"
         else:
@@ -27,7 +27,7 @@ class GeminiEmbeddingFunction(EmbeddingFunction):
 
         response = client.models.embed_content(
             model="models/text-embedding-004",
-            contents=input,
+            contents=inputs,
             config=types.EmbedContentConfig(
                 task_type=embedding_task,
             ),

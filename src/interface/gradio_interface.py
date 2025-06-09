@@ -1,11 +1,12 @@
-# interface/gradio_interface.py
+# pylint: disable=no-member, line-too-long
+"""Gradio UI for the RAG'n'TeX LaTeX Presentation Generator."""
 
+import base64
 import gradio as gr
 from .upload_files import upload_files
 from .download_files import download_files
 from ..generator import generate_presentation
 from ..telemetry import submit_feedback
-import base64
 
 
 def upload_and_update_list(files: list, uploaded_list) -> tuple[str, list[str]]:
@@ -22,20 +23,24 @@ def upload_and_update_list(files: list, uploaded_list) -> tuple[str, list[str]]:
     return status, updated_list
 
 
-def generate_iframe(folder_path):
+def generate_iframe(folder_path) -> str:
+    """Generate an HTML iframe to display the PDF presentation.
+    Args:
+        folder_path (str): Path to the folder containing the generated PDF presentation.
+    Returns:
+        str: HTML string containing the iframe to display the PDF.
+    """
     file_path = f"{folder_path}/presentation.pdf"
     if not file_path:
         return ""
-    else:
-        with open(file_path, "rb") as f:
-            base64_pdf = base64.b64encode(f.read()).decode("utf-8")
-        pdf_display = f"""
-            <div style="position:relative; width:100%; padding-top:76.5%;">
-            <iframe src="data:application/pdf;base64,{base64_pdf}#view=FitH"
-            style="position:absolute; top:0; left:0; width:100%; height:100%; border:none;">
-            </iframe></div>
-        """
-        # pdf_display = f'<iframe width="100%" height="600" src="data:application/pdf;base64,{base64_pdf}"></iframe>'
+    with open(file_path, "rb") as f:
+        base64_pdf = base64.b64encode(f.read()).decode("utf-8")
+    pdf_display = f"""
+        <div style="position:relative; width:100%; padding-top:76.5%;">
+        <iframe src="data:application/pdf;base64,{base64_pdf}#view=FitH"
+        style="position:absolute; top:0; left:0; width:100%; height:100%; border:none;">
+        </iframe></div>
+    """
     return pdf_display
 
 
@@ -55,7 +60,7 @@ theme = gr.themes.Monochrome(
     ),
 ).set(body_background_fill="*neutral_50", body_text_color="*neutral_950")
 
-js_func = """
+JS_FUNC = """
 function refresh() {
     const url = new URL(window.location);
 
@@ -67,17 +72,23 @@ function refresh() {
 """
 
 
-def encode_image(image_path):
+def encode_image(image_path) -> str:
+    """Encode an image file to a base64 string for embedding in HTML.
+    Args:
+        image_path (str): Path to the image file.
+    Returns:
+        str: Base64 encoded string of the image, prefixed with the appropriate data URI scheme.
+    """
     with open(image_path, "rb") as f:
         data = f.read()
         return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
 
-image_base64 = encode_image("gfx/long_logo.png")
-github_base64 = encode_image("gfx/github-mark-white.png")
+IMAGE_BASE64 = encode_image("gfx/long_logo.png")
+GITHUB_BASE64 = encode_image("gfx/github-mark-white.png")
 
 
-with gr.Blocks(theme=theme, js=js_func) as demo:
+with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
     uploaded_files_state = gr.State([])
     presentation_folder_state = gr.State("")
 
@@ -102,7 +113,7 @@ with gr.Blocks(theme=theme, js=js_func) as demo:
             gr.HTML(
                 f"""
                 <div style="text-align:center;">
-                <img src="{image_base64}" style="max-width: 100%; height: auto;" />
+                <img src="{IMAGE_BASE64}" style="max-width: 100%; height: auto;" />
                 </div>
             """
             )
@@ -291,7 +302,7 @@ with gr.Blocks(theme=theme, js=js_func) as demo:
                 onmouseover="this.style.backgroundColor='#6d28d9';"
                 onmouseout="this.style.backgroundColor='#4c1d95';"
                 >
-                    <img src="{github_base64}" alt="GitHub" style="height: 20px; margin: 0;">
+                    <img src="{GITHUB_BASE64}" alt="GitHub" style="height: 20px; margin: 0;">
                     RAG'n'TeX
                 </a>
                 </div>
