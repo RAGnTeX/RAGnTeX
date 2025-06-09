@@ -44,6 +44,19 @@ def generate_iframe(folder_path) -> str:
     return pdf_display
 
 
+def encode_image(image_path):
+    with open(image_path, "rb") as f:
+        data = f.read()
+        return f"data:image/png;base64,{base64.b64encode(data).decode()}"
+
+
+banner_base64 = encode_image("gfx/long_logo.png")
+logo_base64 = encode_image("gfx/icon_logo.png")
+github_base64 = encode_image("gfx/github-mark-white.png")
+favicon_base64 = encode_image("gfx/favicon.ico")
+
+
+# Custom Gradio theme
 theme = gr.themes.Monochrome(
     neutral_hue=gr.themes.Color(
         c50="#f8f4fe",
@@ -72,25 +85,29 @@ function refresh() {
 """
 
 
-def encode_image(image_path) -> str:
-    """Encode an image file to a base64 string for embedding in HTML.
-    Args:
-        image_path (str): Path to the image file.
-    Returns:
-        str: Base64 encoded string of the image, prefixed with the appropriate data URI scheme.
-    """
-    with open(image_path, "rb") as f:
-        data = f.read()
-        return f"data:image/png;base64,{base64.b64encode(data).decode()}"
-
-
-IMAGE_BASE64 = encode_image("gfx/long_logo.png")
-GITHUB_BASE64 = encode_image("gfx/github-mark-white.png")
-
-
 with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
     uploaded_files_state = gr.State([])
     presentation_folder_state = gr.State("")
+
+    # Page title and favicon (doesn't work? Gradio is really agressive)
+    gr.HTML(
+        f"""
+        <script>
+        document.title = "RAG'n'TeX Presentation Generator";
+
+        const links = document.querySelectorAll("link[rel*='icon']");
+        links.forEach(link => link.parentNode.removeChild(link));
+
+        const newFavicon = document.createElement('link');
+        newFavicon.rel = 'icon';
+        newFavicon.type = 'image/png';
+        newFavicon.href = '{favicon_base64}';
+        document.head.appendChild(newFavicon);
+        </script>
+        """,
+        elem_id="custom-head-injection",
+        visible=False,
+    )
 
     # Mess with the download-box
     gr.HTML(
@@ -115,7 +132,7 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
                 <div style="text-align:center;">
                 <img src="{IMAGE_BASE64}" style="max-width: 100%; height: auto;" />
                 </div>
-            """
+                """
             )
         with gr.Column(scale=1):
             gr.Markdown(
@@ -128,6 +145,32 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
             gr.Markdown(
                 '<div style="text-align:justify; margin-top: 0px;">Just upload your PDFs, click <b>Upload Files</b>, '
                 "choose a theme, enter your topic, and hit <b>Generate Presentation</b> — it's that easy!</div>"
+            )
+            gr.HTML(
+                f"""
+                    <div style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 12px; margin-bottom: 12px;">
+                        <p style="font-size: 16px;">Please ⭐️ us on GitHub!</p>
+                        <a href="https://github.com/RAGnTeX/RAGnTeX" target="_blank" style="
+                            display: inline-flex;
+                            align-items: center;
+                            justify-content: center;
+                            padding: 12px 16px;
+                            background-color: #4c1d95;
+                            color: white;
+                            font-weight: 600;
+                            border-radius: 8px;
+                            text-decoration: none;
+                            gap: 8px;
+                            transition: background-color 0.2s ease-in-out;
+                            "
+                            onmouseover="this.style.backgroundColor='#6d28d9';"
+                            onmouseout="this.style.backgroundColor='#4c1d95';"
+                        >
+                            <img src="{github_base64}" alt="GitHub" style="height: 20px;">
+                            RAG'n'TeX
+                        </a>
+                    </div>
+                """
             )
 
     with gr.Row():
@@ -239,9 +282,9 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
 
     gr.Markdown("<br>")
 
-    gr.Markdown("## ⭐ Rate Us")
     with gr.Row():
         with gr.Column(scale=1):
+            gr.Markdown("## ⭐ Rate Us")
             rating = gr.Radio(
                 choices=["⭐️", "⭐️⭐️", "⭐️⭐️⭐️", "⭐️⭐️⭐️⭐️", "⭐️⭐️⭐️⭐️⭐️"],
                 label="How would you rate this app?",
@@ -258,65 +301,41 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
                 max_lines=5,
                 interactive=True,
             )
-        with gr.Column(scale=1):
             submit_feedback_button = gr.Button("Submit Feedback", variant="secondary")
             feedback_output = gr.Textbox(
-                label="Feedback Status", interactive=False, lines=4
+                label="Feedback Status", interactive=False, lines=2
             )
 
-    gr.Markdown("## 🙌 Credits")
-    with gr.Row():
         with gr.Column(scale=1):
-            gr.Markdown(
-                '<div style="text-align:justify; margin-top: 0px;">'
-                "RAG'n'TeX is a collaborative effort by a team of developers and researchers driven "
-                "to make the everyday work of scientists and professionals easier. By combining LaTeX with AI, "
-                "we create smart tools that help you build polished, accurate presentations quickly and smoothly. "
-                "Our goal is to make the process simple and stress-free, so you can spend more time on what really matters.</div>\n\n"
-            )
-        with gr.Column(scale=1):
+            gr.Markdown("## 🙌 Credits")
             gr.HTML(
                 f"""
-                <div style="display: flex; flex-direction: column; align-items: stretch;
-                    gap: 8px; margin: 0; font-family: inherit;">
-                <p style="margin: 0 0 8px 0; padding: 0; font-size: 16px; font-family: inherit; text-align: center;">
-                    Please ⭐️ us on GitHub!
-                </p>
-                <a href="https://github.com/RAGnTeX/RAGnTeX" target="_blank" style="
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    width: 100%;
-                    padding: 12px;
-                    background-color: #4c1d95;
-                    color: white;
-                    font-weight: 600;
-                    font-family: inherit;
-                    border-radius: 0;
-                    text-decoration: none;
-                    user-select: none;
-                    cursor: pointer;
-                    gap: 8px;
-                    transition: background-color 0.2s ease-in-out;
-                "
-                onmouseover="this.style.backgroundColor='#6d28d9';"
-                onmouseout="this.style.backgroundColor='#4c1d95';"
-                >
-                    <img src="{GITHUB_BASE64}" alt="GitHub" style="height: 20px; margin: 0;">
-                    RAG'n'TeX
-                </a>
-                </div>
-            """
-            )
+                <div style="display: flex; flex-direction: row; gap: 24px; margin-top: 0; align-items: flex-start;">
 
-        with gr.Column(scale=1):
-            gr.Markdown(
-                "#### Authors:\n"
-                "- 👩🏻‍💻 **[Anna Ershova](https://github.com/AnnaErsh)**\n"
-                "- 👨🏼‍🔬 **[Kajetan Niewczas](https://github.com/KajetanNiewczas)**\n"
-            )
-            gr.Markdown(
-                "📄 Licensed under the [MIT License](https://opensource.org/licenses/MIT)"
+                <!-- Left Column -->
+                <div style="flex: 1;">
+                    <div style="text-align:justify; margin-top: 0px;">
+                    <p> RAG'n'TeX is a collaborative effort by a team of developers and researchers driven
+                    to make the everyday work of scientists and professionals easier. By combining LaTeX with AI,
+                    we create smart tools that help you build polished, accurate presentations quickly and smoothly.
+                    Our goal is to make the process simple and stress-free, so you can spend more time on what really matters.</p>
+                    <br>
+                    <p>📄 Licensed under the <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a></p>
+                    <br>
+                    <h4>Authors:</h4>
+                        <ul style="padding-left: 20px; margin-top: 4px;">
+                        <li>👩🏻‍💻 <a href="https://github.com/AnnaErsh" target="_blank">Anna Ershova</a></li>
+                        <li>👨🏼‍🔬 <a href="https://github.com/KajetanNiewczas" target="_blank">Kajetan Niewczas</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div style="flex: 1; display: flex; justify-content: flex-end; align-items: center;">
+                    <img src="{logo_base64}" alt="Illustration" style="max-width: 100%; border-radius: 8px;">
+                </div>
+                </div>
+                """
             )
 
     upload_button.click(

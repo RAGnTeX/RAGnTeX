@@ -56,8 +56,11 @@ def generate_presentation(theme, color, topic) -> tuple[str, str, str]:
     LOGGER.info("🎲 Generated the response using: %s", model_name)
 
     find_used_gfx(answer, work_dir, metadatas)
-    compile_presentation(answer.text, work_dir)
+    compilation_status = compile_presentation(answer.text, work_dir)
 
     # delete_uploaded_files(uploaded_files)
 
-    return "Presentation generated successfully!", trace_id, work_dir
+    if compilation_status:
+        return compilation_status, trace_id, work_dir
+    else:
+        return "❌ Unknown critial error. Please try again later.", trace_id, work_dir

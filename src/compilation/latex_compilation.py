@@ -10,7 +10,7 @@ LOGGER = Logger.get_logger()
 
 
 @observe(name="🧱 compile_presentation")
-def compile_presentation(latex_code, work_dir) -> None:
+def compile_presentation(latex_code, work_dir) -> str:
     """Compile LaTeX code into a PDF presentation.
     Args:
         latex_code (str): LaTeX code to be compiled.
@@ -57,17 +57,25 @@ def compile_presentation(latex_code, work_dir) -> None:
         langfuse_context.update_current_observation(
             output={"pdf.success": False, "pdf.error_log": e.stderr.decode()}
         )
-        LOGGER.error("❌ PDF generation failed. Here's the log: %s", e.stderr.decode())
-    else:
         # Check for PDF output
+        if not os.path.exists("presentation.pdf"):
+            LOGGER.error("❌ PDF generation failed and no PDF file found. Here's the log: %s", e.stderr.decode())
+            return "❌ Presentation compilation failed. Please try again later."
+        else:
+            LOGGER.error("⚠️ PDF generation failed, but PDF file exists. Here's the log: %s", e.stderr.decode())
+            return "⚠️ Presentation compilation contains errors. Please cross-check the output."
+    else:
+        # Success, but still check for PDF output
         if not os.path.exists("presentation.pdf"):
             langfuse_context.update_current_observation(
                 output={
                     "pdf.success": False,
-                    "pdf.error_log": "❌ PDF generation failed. No PDF file found.",
+                    "pdf.error_log": "❌ PDF generation succeded, but no PDF file found.",
                 }
             )
             LOGGER.error("❌ PDF generation failed. No PDF file found.")
+            return "❌ Presentation compilation failed. Please try again later."
         else:
             langfuse_context.update_current_observation(output={"pdf.success": True})
-            LOGGER.info("💾 PDF generated successfully in: %s", work_dir)
+            LOGGER.info("✅ PDF generated successfully in: %s", work_dir)
+            return "⭐️ Presentation generated successfully!"
