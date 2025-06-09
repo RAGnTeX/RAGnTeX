@@ -2,14 +2,12 @@
 
 from langfuse.decorators import langfuse_context, observe
 
+from src.compilation import compile_presentation
 # from datetime import datetime
 from src.database import retrive_files_from_db
-from src.telemetry import Logger
-from src.processing import get_prompt, create_output_folder
+from src.processing import create_output_folder, find_used_gfx, get_prompt
 from src.services import client
-from src.compilation import compile_presentation
-from src.processing import find_used_gfx
-
+from src.telemetry import Logger
 
 LOGGER = Logger.get_logger()
 
