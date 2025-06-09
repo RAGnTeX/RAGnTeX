@@ -49,5 +49,5 @@ docker run \
   --env-file .env \
   -e IN_DOCKER=true \
   -p 7860:7860 \
-  -v /Users/annaershova/Documents/Projects/CapstoneGenAi/RAGnTeX/output:/app/output \
+  -v /path/to/your/output:/app/output \
   ragntex
