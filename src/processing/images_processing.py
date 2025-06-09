@@ -105,7 +105,11 @@ def extract_images(pdf, doc, page, page_num) -> list[dict]:
             # Get the image ratio
             width = image_bbox.width
             height = image_bbox.height
-            ratio = width / height if height != 0 else 2
+            ratio = width / height if height != 0 else 20
+
+            # Remove images with weird ratios
+            if ratio < 0.1 or ratio > 10:
+                continue
 
             # Classify the image based on the ratio
             if ratio >= 1.5:
@@ -323,7 +327,11 @@ def extract_vector(pdf, page, page_num) -> list[dict]:
             )
 
             # Get the figure ratio
-            ratio = width / height if height != 0 else 2
+            ratio = width / height if height != 0 else 20
+
+            # Remove images with weird ratios
+            if ratio < 0.1 or ratio > 10:
+                continue
 
             # Classify the image based on the ratio
             if ratio >= 1.5:
