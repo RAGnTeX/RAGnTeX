@@ -130,7 +130,7 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
             gr.HTML(
                 f"""
                 <div style="text-align:center;">
-                <img src="{IMAGE_BASE64}" style="max-width: 100%; height: auto;" />
+                <img src="{banner_base64}" style="max-width: 100%; height: auto;" />
                 </div>
                 """
             )
