@@ -14,7 +14,7 @@ LOGGER = Logger.get_logger()
 session_data = {}
 
 
-def create_session() -> str:
+def create_session(timeout=600) -> str:
     """Create a new session and return its ID.
     This function generates a unique session ID, initializes the session data
     with the current timestamp, and starts a background thread to monitor
@@ -33,7 +33,9 @@ def create_session() -> str:
     LOGGER.info("🪪 Created new session with ID: %s", session_id)
 
     # Start clean-up watcher
-    threading.Thread(target=watch_session, args=(session_id,), daemon=True).start()
+    threading.Thread(
+        target=watch_session, args=(session_id, timeout), daemon=True
+    ).start()
 
     return session_id
 
@@ -57,6 +59,7 @@ def watch_session(session_id, timeout=600) -> None:
         if time.time() - session["last_active"] > timeout:
             del session_data[session_id]
             LOGGER.info("🧹 Deleted session with ID: %s", session_id)
+            # Whatever will be deleted later, we could delay it a little bit
             break
 
 
@@ -98,3 +101,7 @@ def with_update_session(fn: Callable[..., Any]) -> Callable[..., Any]:
         return fn(*args, **kwargs)
 
     return wrapper
+
+
+def check_session_status(session_id: str) -> str:
+    return "active" if session_id in session_data else "expired"
