@@ -1,11 +1,12 @@
 """Module for adding and getting PDF files to/from the database."""
 
-from typing import Mapping, Union, List
+from typing import List, Mapping, Union
+
 from langfuse.decorators import langfuse_context, observe
 
-from .database import db, embed_fn
-from ..telemetry import Logger
 from ..processing import process_documents
+from ..telemetry import Logger
+from .database import db, embed_fn
 
 LOGGER = Logger.get_logger()
 
@@ -33,7 +34,7 @@ def ingest_files_to_db(pdf_files) -> list[str]:
 
     if not new_pdfs:
         LOGGER.info("📂 No new PDFs to ingest. Skipping ingestion.")
-        return
+        return []
 
     # Process new files only
     documents, metadatas, failed = process_documents(new_pdfs)

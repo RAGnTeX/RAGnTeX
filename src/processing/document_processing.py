@@ -1,13 +1,14 @@
 """Module handling PDF document processing and content extraction."""
 
-import re
 import os
+import re
 from pathlib import Path
+
 import fitz
 from langfuse.decorators import langfuse_context, observe
 
-from .images_processing import extract_images, extract_vector
 from ..telemetry import Logger
+from .images_processing import extract_images, extract_vector
 
 LOGGER = Logger.get_logger()
 

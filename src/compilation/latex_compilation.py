@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+
 from langfuse.decorators import langfuse_context, observe
 
 from ..telemetry import Logger
@@ -59,11 +60,18 @@ def compile_presentation(latex_code, work_dir) -> str:
         )
         # Check for PDF output
         if not os.path.exists("presentation.pdf"):
-            LOGGER.error("❌ PDF generation failed and no PDF file found. Here's the log: %s", e.stderr.decode())
+            LOGGER.error(
+                "❌ PDF generation failed and no PDF file found. Here's the log: %s",
+                e.stderr.decode(),
+            )
             return "❌ Presentation compilation failed. Please try again later."
-        else:
-            LOGGER.error("⚠️ PDF generation failed, but PDF file exists. Here's the log: %s", e.stderr.decode())
-            return "⚠️ Presentation compilation contains errors. Please cross-check the output."
+        LOGGER.error(
+            "⚠️ PDF generation failed, but PDF file exists. Here's the log: %s",
+            e.stderr.decode(),
+        )
+        return (
+            "⚠️ Presentation compilation contains errors. Please cross-check the output."
+        )
     else:
         # Success, but still check for PDF output
         if not os.path.exists("presentation.pdf"):
@@ -75,7 +83,7 @@ def compile_presentation(latex_code, work_dir) -> str:
             )
             LOGGER.error("❌ PDF generation failed. No PDF file found.")
             return "❌ Presentation compilation failed. Please try again later."
-        else:
-            langfuse_context.update_current_observation(output={"pdf.success": True})
-            LOGGER.info("✅ PDF generated successfully in: %s", work_dir)
-            return "⭐️ Presentation generated successfully!"
+
+        langfuse_context.update_current_observation(output={"pdf.success": True})
+        LOGGER.info("✅ PDF generated successfully in: %s", work_dir)
+        return "⭐️ Presentation generated successfully!"
