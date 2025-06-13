@@ -9,7 +9,9 @@ from ..generator import generate_presentation
 from ..telemetry import submit_feedback
 from .download_files import download_files
 from .upload_files import upload_files
-from .session_manager import create_session, with_update_session
+from .session_manager import create_session, with_update_session, check_session_status
+
+SESSION_TIMEOUT = 30 #600
 
 
 def upload_and_update_list(files: list, uploaded_list, _session_id) -> tuple[str, list[str]]:
@@ -63,7 +65,6 @@ def encode_image(image_path) -> str:
         data = f.read()
         return f"data:image/png;base64,{base64.b64encode(data).decode()}"
 
-
 banner_base64 = encode_image("gfx/long_logo.png")
 logo_base64 = encode_image("gfx/icon_logo.png")
 github_base64 = encode_image("gfx/github-mark-white.png")
@@ -87,20 +88,69 @@ theme = gr.themes.Monochrome(
     ),
 ).set(body_background_fill="*neutral_50", body_text_color="*neutral_950")
 
-JS_FUNC = """
-function refresh() {
-    const url = new URL(window.location);
 
+# Additional JavaScript to handle session management and UI updates
+JS_FUNC = r"""
+() => {
+    // Force light theme
+    const url = new URL(window.location);
     if (url.searchParams.get('__theme') !== 'light') {
         url.searchParams.set('__theme', 'light');
         window.location.href = url.href;
     }
-}
+
+    const overlayDiv = document.createElement("div");
+    overlayDiv.id = "session-overlay";
+    overlayDiv.style = `
+        display: flex;
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        font-size: 1.5rem;
+        text-align: center;
+        z-index: 999999;
+    `;
+    overlayDiv.innerHTML = `
+        ❌ Session expired.<br/>🔄 Please refresh the page to start over.
+    `;
+
+    const checker = setInterval(() => {
+        const checkBtn = document.querySelector('#check-session-button');
+        if (checkBtn) checkBtn.click();
+
+        const statusBox = document.querySelector('#session-status textarea');
+        if (!statusBox) return;
+
+        const value = statusBox.value;
+
+        if (value === "expired") {
+            document.body.appendChild(overlayDiv);
+            console.log("Session expired, please refresh the page.");
+
+            clearInterval(checker);
+        }
+    }, 5000);
+
+    }
 """
 
 
 with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
+    # Session management
     session_id = gr.State()
+    session_timeout = gr.State(SESSION_TIMEOUT)
+    status_output = gr.Textbox(visible=False, elem_id="session-status")
+    check_btn = gr.Button(visible=False, elem_id="check-session-button")
+    check_btn.click(
+        fn=check_session_status,
+        inputs=[session_id],
+        outputs=[status_output],
+    )
+    ###
+
     uploaded_files_state = gr.State([])
     presentation_folder_state = gr.State("")
 
@@ -360,7 +410,8 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
 
     demo.load(
         fn=create_session,
-        outputs=session_id
+        inputs=session_timeout,
+        outputs=session_id,
     )
 
     upload_button.click(
