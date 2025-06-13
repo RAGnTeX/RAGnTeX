@@ -72,18 +72,18 @@ def compile_presentation(latex_code, work_dir) -> str:
         return (
             "⚠️ Presentation compilation contains errors. Please cross-check the output."
         )
-    else:
-        # Success, but still check for PDF output
-        if not os.path.exists("presentation.pdf"):
-            langfuse_context.update_current_observation(
-                output={
-                    "pdf.success": False,
-                    "pdf.error_log": "❌ PDF generation succeded, but no PDF file found.",
-                }
-            )
-            LOGGER.error("❌ PDF generation failed. No PDF file found.")
-            return "❌ Presentation compilation failed. Please try again later."
 
-        langfuse_context.update_current_observation(output={"pdf.success": True})
-        LOGGER.info("✅ PDF generated successfully in: %s", work_dir)
-        return "⭐️ Presentation generated successfully!"
+    # Success, but still check for PDF output
+    if not os.path.exists("presentation.pdf"):
+        langfuse_context.update_current_observation(
+            output={
+                "pdf.success": False,
+                "pdf.error_log": "❌ PDF generation succeded, but no PDF file found.",
+            }
+        )
+        LOGGER.error("❌ PDF generation failed. No PDF file found.")
+        return "❌ Presentation compilation failed. Please try again later."
+
+    langfuse_context.update_current_observation(output={"pdf.success": True})
+    LOGGER.info("✅ PDF generated successfully in: %s", work_dir)
+    return "⭐️ Presentation generated successfully!"

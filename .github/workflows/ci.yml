@@ -29,8 +29,18 @@ jobs:
       - name: Install dependencies
         run: poetry install --with dev
 
-      - name: Run Black
-        run: poetry run black --check .
+      - name: Run Black and isort
+        run: |
+          poetry run black .
+          poetry run isort .
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "style: Automatic formatting via CI (Black + isort)"
+          branch: ${{ github.head_ref || github.ref_name }}
+          # Optional: set these to limit what gets committed
+          file_pattern: "*.py"
 
       - name: Run Mypy
         run: poetry run mypy .

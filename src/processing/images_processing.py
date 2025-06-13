@@ -1,3 +1,4 @@
+# pylint: disable=line-too-long
 """Module handling images exrtraction and processing from the uploaded PDF documents."""
 
 import hashlib
