@@ -18,11 +18,13 @@ LOGGER = Logger.get_logger()
 
 def find_image_caption(page, image_bbox, max_distance=100) -> Optional[str]:
     """Method to find and extract image caption based on the image bounding box.
+
     Args:
         page (fitz.Page): The page object from which to extract the caption.
         image_bbox (fitz.Rect): The bounding box of the image.
         max_distance (int): The maximum vertical distance from the image bottom to consider
             a text block as a potential caption.
+
     Returns:
         str: The extracted caption text if found, otherwise None.
     """
@@ -73,11 +75,13 @@ def find_image_caption(page, image_bbox, max_distance=100) -> Optional[str]:
 
 def extract_images(pdf, doc, page, page_num) -> list[dict]:
     """Extract images from a PDF page and classify them based on their aspect ratio.
+
     Args:
         pdf (str): The PDF filename without extension.
         doc (fitz.Document): The PDF document object.
         page (fitz.Page): The PDF page object.
         page_num (int): The page number in the PDF document.
+
     Returns:
         list: A list of dictionaries containing image metadata, including:
             - "name": The name of the image file.
@@ -138,10 +142,12 @@ def extract_images(pdf, doc, page, page_num) -> list[dict]:
 
 def are_bounding_boxes_close(bbox1, bbox2, threshold=50) -> bool:
     """Check if two bounding boxes are close to each other based on their edges.
+
     Args:
         bbox1 (tuple): The first bounding box as a tuple (left, top, right, bottom).
         bbox2 (tuple): The second bounding box as a tuple (left, top, right, bottom).
         threshold (int): The distance threshold to consider two boxes as close.
+
     Returns:
         bool: True if the bounding boxes are close, False otherwise.
     """
@@ -160,8 +166,10 @@ def are_bounding_boxes_close(bbox1, bbox2, threshold=50) -> bool:
 
 def merge_bounding_boxes(bboxes) -> Optional[fitz.Rect]:
     """Merge a list of bounding boxes into a single bounding box.
+
     Args:
         bboxes (list): A list of bounding boxes, each represented as a tuple (left, top, right, bottom).
+
     Returns:
         fitz.Rect: A single bounding box that encompasses all input bounding boxes.
     """
@@ -176,9 +184,11 @@ def merge_bounding_boxes(bboxes) -> Optional[fitz.Rect]:
 
 def group_bounding_boxes(bboxes, threshold=50) -> list:
     """Group bounding boxes that are close to each other into larger bounding boxes.
+
     Args:
         bboxes (list): A list of bounding boxes, each represented as a tuple (left, top, right, bottom).
         threshold (int): The distance threshold to consider two boxes as close.
+
     Returns:
         list: A list of merged bounding boxes, where each box represents a group of close bounding boxes.
     """
@@ -220,10 +230,12 @@ def group_bounding_boxes(bboxes, threshold=50) -> list:
 
 def process_large_drawing(drawings, max_drawings=1000, threshold=50) -> list:
     """Process a large number of drawings by grouping them into bounding boxes.
+
     Args:
         drawings (list): A list of drawing dictionaries, each containing a "rect" key with bounding box coordinates.
         max_drawings (int): Maximum number of drawings to process at once.
         threshold (int): The distance threshold to consider two boxes as close.
+
     Returns:
         list: A list of merged bounding boxes, where each box represents a group of close drawings.
     """
@@ -247,10 +259,12 @@ def process_large_drawing(drawings, max_drawings=1000, threshold=50) -> list:
 
 def find_surrounding_text(page, group, threshold=50) -> list:
     """Find text blocks surrounding a given bounding box on a PDF page.
+
     Args:
         page (fitz.Page): The PDF page object.
         group (fitz.Rect): The bounding box of the group of drawings.
         threshold (int): The distance threshold to consider a text block as surrounding.
+
     Returns:
         list: A list of bounding boxes of surrounding text blocks.
     """
@@ -271,10 +285,12 @@ def find_surrounding_text(page, group, threshold=50) -> list:
 
 def extract_vector(pdf, page, page_num) -> list[dict]:
     """Extract vector graphics from a PDF page and classify them based on their aspect ratio.
+
     Args:
         pdf (str): The PDF filename without extension.
         page (fitz.Page): The PDF page object.
         page_num (int): The page number in the PDF document.
+
     Returns:
         list: A list of dictionaries containing figure metadata, including:
             - "name": The name of the figure file.
@@ -360,10 +376,12 @@ def extract_vector(pdf, page, page_num) -> list[dict]:
 
 def save_pdf_images(pdf_path: str, req_imgs: list, images_dir: str) -> bool:
     """Save images used in the presentation to the specified directory.
+
     Args:
         pdf_path (str): Path to the PDF file.
         req_imgs (list): List of dictionaries containing required images metadata.
         images_dir (str): Directory where the images will be saved.
+
     Returns:
         bool: True if images were saved successfully, False otherwise.
     """
@@ -407,10 +425,12 @@ def save_pdf_images(pdf_path: str, req_imgs: list, images_dir: str) -> bool:
 
 def save_pdf_figures(pdf_path: str, req_figs: list, figures_dir: str) -> bool:
     """Save figures used in the presentation to the specified directory.
+
     Args:
         pdf_path (str): Path to the PDF file.
         req_figs (list): List of dictionaries containing required figures metadata.
         figures_dir (str): Directory where the figures will be saved.
+
     Returns:
         bool: True if figures were saved successfully, False otherwise.
     """
@@ -488,6 +508,7 @@ def save_pdf_figures(pdf_path: str, req_figs: list, figures_dir: str) -> bool:
 def find_used_gfx(answer, work_dir: str, metadatas: list) -> None:
     """Finds and saves the figures used in the LLM output to the gfx directory
     where the presentation will be compiled.
+
     Args:
         answer (str): The LLM answer containing names of the figures.
         work_dir (str): The working directory where the presentation will be compiled.
