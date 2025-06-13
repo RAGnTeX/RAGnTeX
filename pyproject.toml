@@ -8,6 +8,7 @@ authors = [
 ]
 license = {text = "Apache 2.0"}
 readme = "README.md"
+packages = [{ include = "src" }]
 requires-python = ">=3.10,<3.11"
 dependencies = [
     "google-genai (==1.11.0)",
@@ -35,3 +36,7 @@ pytest = "^8.4.0"
 mypy = "^1.16.0"
 isort = "^6.0.1"
 
+
+[tool.poetry.group.docs.dependencies]
+sphinx-autodoc-typehints = "1.22"
+furo = "^2024.8.6"
