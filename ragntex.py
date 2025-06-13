@@ -1,6 +1,7 @@
 """RAGnTex: A Retrieval-Augmented Generation for LaTeX Documents"""
 
 import os
+
 from src import demo, init_telemetry
 
 # Setup OpenTelemetry

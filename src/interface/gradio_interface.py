@@ -2,11 +2,13 @@
 """Gradio UI for the RAG'n'TeX LaTeX Presentation Generator."""
 
 import base64
+
 import gradio as gr
-from .upload_files import upload_files
-from .download_files import download_files
+
 from ..generator import generate_presentation
 from ..telemetry import submit_feedback
+from .download_files import download_files
+from .upload_files import upload_files
 from .session_manager import create_session, with_update_session
 
 
@@ -50,7 +52,13 @@ def generate_iframe(folder_path) -> str:
     return pdf_display
 
 
-def encode_image(image_path):
+def encode_image(image_path) -> str:
+    """Encode an image file to a base64 data URL.
+    Args:
+        image_path (str): Path to the image file.
+    Returns:
+        str: Base64 data URL of the image.
+    """
     with open(image_path, "rb") as f:
         data = f.read()
         return f"data:image/png;base64,{base64.b64encode(data).decode()}"

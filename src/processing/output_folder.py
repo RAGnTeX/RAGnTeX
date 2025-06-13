@@ -1,8 +1,9 @@
 """Module to create an output folder for saving results."""
 
 import os
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
 from ..telemetry import Logger
 
 LOGGER = Logger.get_logger()
