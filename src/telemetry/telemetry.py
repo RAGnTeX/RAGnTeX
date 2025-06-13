@@ -23,12 +23,13 @@ def init_telemetry() -> Langfuse:
 
 
 @observe(name="📝 submit_feedback")
-def submit_feedback(rating: str, comment: str, trace_id: str) -> str:
+def submit_feedback(rating: str, comment: str, trace_id: str, _session_id: str) -> str:
     """Submit user feedback with a star rating and optional comment.
     Args:
         rating (str): Star rating as a string of emojis (e.g., "⭐⭐⭐").
         comment (str): Optional user comment.
         trace_id (str): Langfuse trace ID for linking feedback.
+        session_id (str): Unique identifier for the current session.
     Returns:
         str: Confirmation message indicating success or failure.
     """
