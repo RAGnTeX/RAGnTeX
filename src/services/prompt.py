@@ -1,6 +1,8 @@
 """Module contatining the master prompt."""
 
 
+# This is an AI prompt template, not a SQL statement.
+# Bandit flagged it mistakenly as a possible SQL injection.
 def get_prompt(
     presentation_theme: str = "default", color_theme: str = "default"
 ) -> str:
@@ -120,7 +122,7 @@ def get_prompt(
     - Skip any image with caption `"None"`.
     - Use **Core Idea 2** layout for **vertical** and **square** images.
     - Use **Core Idea 3** layout for **horizontal** images
-    (when a two-column layout is not suitable).\n\n"""
+    (when a two-column layout is not suitable).\n\n"""  # nosec B608
 
     return prompt
 
