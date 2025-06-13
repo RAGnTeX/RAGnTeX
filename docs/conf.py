@@ -7,12 +7,11 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 import os
 import sys
-from pathlib import Path
 
 project = "RAGnTeX"
 copyright = "2025, Anna Ershova, Kajetan Niewczas"
 author = "Anna Ershova, Kajetan Niewczas"
-release = "0.1.0"
+# release = "0.1.0"
 
 # ── allow “import ragntex …” ────────────────────────────────────────────────
 sys.path.insert(0, os.path.abspath("../src"))

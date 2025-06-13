@@ -85,7 +85,7 @@ def json_to_tex(presentation_json: str, theme: str, color_theme: str) -> str:
                         {body}
                         \\end{{column}}
                         \\begin{{column}}{{0.5\\linewidth}}
-                        \\center{{\\includegraphics[height=1.0\\textheight, width=1.0\\textwidth, keepaspectratio]{{{img["path"]}}} \\\\ {img["caption"]}}} # pylint: disable=line-too-long
+                        \\center{{\\includegraphics[height=1.0\\textheight, width=1.0\\textwidth, keepaspectratio]{{{img["path"]}}} \\\\ {img["caption"]}}}
                         \\end{{column}}
                         \\end{{columns}}
                         \\end{{frame}}"""
@@ -96,7 +96,7 @@ def json_to_tex(presentation_json: str, theme: str, color_theme: str) -> str:
                 slides.append(
                     f"""\\begin{{frame}}
                         \\frametitle{{{core_title}}}
-                        \\center{{\\includegraphics[height=0.5\\textheight, width=0.8\\textwidth, keepaspectratio]{{{img["path"]}}} \\\\ {img["caption"]} \\\\}} # pylint: disable=line-too-long
+                        \\center{{\\includegraphics[height=0.5\\textheight, width=0.8\\textwidth, keepaspectratio]{{{img["path"]}}} \\\\ {img["caption"]} \\\\}}
                         {body}
                         \\end{{frame}}"""
                 )
