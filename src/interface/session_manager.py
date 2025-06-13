@@ -10,7 +10,7 @@ LOGGER = Logger.get_logger()
 # Global session manager
 session_data = {}
 
-def create_session() -> str:
+def create_session(timeout=600) -> str:
     """Create a new session and return its ID."""
 
     # Create new session
@@ -21,7 +21,7 @@ def create_session() -> str:
     LOGGER.info("🪪 Created new session with ID: %s", session_id)
 
     # Start clean-up watcher
-    threading.Thread(target=watch_session, args=(session_id,), daemon=True).start()
+    threading.Thread(target=watch_session, args=(session_id, timeout), daemon=True).start()
 
     return session_id
 
@@ -36,6 +36,7 @@ def watch_session(session_id, timeout=600):
         if time.time() - session["last_active"] > timeout:
             del session_data[session_id]
             LOGGER.info("🧹 Deleted session with ID: %s", session_id)
+            # Whatever will be deleted later, we could delay it a little bit
             break
 
 def update_session(session_id):
@@ -56,3 +57,6 @@ def with_update_session(fn):
             LOGGER.error("❌ Failed to upadate session ID: %s", session_id, exc_info=e)
         return fn(*args, **kwargs)
     return wrapper
+
+def check_session_status(session_id: str) -> str:
+    return "active" if session_id in session_data else "expired"
