@@ -7,19 +7,23 @@ from .upload_files import upload_files
 from .download_files import download_files
 from ..generator import generate_presentation
 from ..telemetry import submit_feedback
+from .session_manager import create_session, with_update_session
 
 
-def upload_and_update_list(files: list, uploaded_list) -> tuple[str, list[str]]:
+def upload_and_update_list(files: list, uploaded_list, _session_id) -> tuple[str, list[str]]:
     """Helper function to handle uploaded documents and update the list of uploaded files.
     Args:
         files (list): List of file-like objects to be uploaded.
         uploaded_list (list): Current list of uploaded file paths.
+        session_id (str): Unique identifier for the current session.
     Returns:
         tuple: A 2-element tuple:
             - str: Status message indicating the result of the upload operation.
             - list[str]: Updated list of uploaded file paths."""
+
     status, new_paths = upload_files(files)
     updated_list = uploaded_list + [p for p in new_paths if p not in uploaded_list]
+
     return status, updated_list
 
 
@@ -30,6 +34,7 @@ def generate_iframe(folder_path) -> str:
     Returns:
         str: HTML string containing the iframe to display the PDF.
     """
+
     file_path = f"{folder_path}/presentation.pdf"
     if not file_path:
         return ""
@@ -41,6 +46,7 @@ def generate_iframe(folder_path) -> str:
         style="position:absolute; top:0; left:0; width:100%; height:100%; border:none;">
         </iframe></div>
     """
+
     return pdf_display
 
 
@@ -86,6 +92,7 @@ function refresh() {
 
 
 with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
+    session_id = gr.State()
     uploaded_files_state = gr.State([])
     presentation_folder_state = gr.State("")
 
@@ -341,19 +348,30 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
                 """
             )
 
+    # Event handlers
+
+    demo.load(
+        fn=create_session,
+        outputs=session_id
+    )
+
     upload_button.click(
-        fn=upload_and_update_list,
-        inputs=[file_input, uploaded_files_state],
+        fn=with_update_session(upload_and_update_list),
+        inputs=[
+            file_input,
+            uploaded_files_state,
+            session_id],
         outputs=[upload_output, uploaded_files_state],
     )
 
     trace_id_state = gr.State("")
     submit_topic_button.click(
-        fn=generate_presentation,
+        fn=with_update_session(generate_presentation),
         inputs=[
             presentation_theme_state,
             color_theme_state,
             topic_input,
+            session_id,
         ],
         outputs=[compilation_status, trace_id_state, presentation_folder_state],
     )
@@ -371,7 +389,12 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
     )
 
     submit_feedback_button.click(
-        fn=submit_feedback,
-        inputs=[rating, feedback_comment, trace_id_state],
+        fn=with_update_session(submit_feedback),
+        inputs=[
+            rating,
+            feedback_comment,
+            trace_id_state,
+            session_id,
+        ],
         outputs=feedback_output,
     )

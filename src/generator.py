@@ -15,13 +15,14 @@ LOGGER = Logger.get_logger()
 
 
 @observe(name="🧑‍🎨 generate_presentation")
-def generate_presentation(theme, color, topic) -> tuple[str, str, str]:
+def generate_presentation(theme, color, topic, _session_id) -> tuple[str, str, str]:
     """Main function to generate a presentation based on the provided theme, color, and topic.
     Args:
         theme (str): The theme of the presentation, chosen by user via UI, defaults to "default".
         color (str): The color scheme for the presentation, chosen by user via UI,
         defaults to "default".
         topic (str): The topic of the presentation, set by user via UI, defaults to "default".
+        session_id (str): Unique identifier for the current session.
     Returns:
         tuple: A 3-element tuple:
             - str: Success message.

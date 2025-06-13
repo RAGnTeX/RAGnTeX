@@ -2,5 +2,6 @@
 
 from .gradio_interface import demo
 from .upload_files import upload_files
+from .session_manager import create_session, with_update_session
 
-__all__ = ["upload_files", "demo"]
+__all__ = ["upload_files", "demo", "create_session", "with_update_session"]
