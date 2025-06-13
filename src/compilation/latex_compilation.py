@@ -1,7 +1,7 @@
 """Module for compiling LaTeX presentations into PDF format."""
 
-import os
-import subprocess
+import os  # nosec B404 - safe usage
+import subprocess  # nosec B404 - safe usage
 
 from langfuse.decorators import langfuse_context, observe
 
@@ -45,13 +45,13 @@ def compile_presentation(latex_code, work_dir) -> str:
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-        )
+        )  # nosec B603 B607 - fixed command, no untrusted input
         subprocess.run(
             ["pdflatex", "-interaction=nonstopmode", "presentation.tex"],
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-        )
+        )  # nosec B603 B607 - fixed command, no untrusted input
 
     except subprocess.CalledProcessError as e:
         # Handle error in case of failed LaTeX compilation

@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 jobs:
   lint:
@@ -39,7 +39,6 @@ jobs:
         with:
           commit_message: "style: Automatic formatting via CI (Black + isort)"
           branch: ${{ github.head_ref || github.ref_name }}
-          # Optional: set these to limit what gets committed
           file_pattern: "*.py"
 
       - name: Run Mypy
@@ -52,14 +51,21 @@ jobs:
           echo "Pylint score: $score"
           awk -v s="$score" 'BEGIN {exit (s >= 9.5) ? 0 : 1}'
 
+      - name: Run Bandit security scan
+        run: poetry run bandit -r src/
+
+      - name: Run Safety vulnerability check (warnings only)
+        run: |
+          poetry run safety check --full-report || true
+
       - name: Build docs
         working-directory: docs
         run: poetry run sphinx-build -b html . _build/html
 
-      - name: Deploy to GitHub Pages
-        if: github.actor != 'nektos/act'
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/_build/html
-          publish_branch: gh-pages
+      # - name: Deploy to GitHub Pages
+      #   if: github.actor != 'nektos/act'
+      #   uses: peaceiris/actions-gh-pages@v4
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     publish_dir: ./docs/_build/html
+      #     publish_branch: gh-pages
