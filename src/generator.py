@@ -2,14 +2,13 @@
 
 from langfuse.decorators import langfuse_context, observe
 
+from src.compilation import compile_presentation, json_to_tex
+
 # from datetime import datetime
 from src.database import retrive_files_from_db
+from src.processing import create_output_folder, find_used_gfx
+from src.services import Presentation, build_prompt, client
 from src.telemetry import Logger
-from src.processing import get_prompt, create_output_folder
-from src.services import client
-from src.compilation import compile_presentation
-from src.processing import find_used_gfx
-
 
 LOGGER = Logger.get_logger()
 
@@ -33,20 +32,21 @@ def generate_presentation(theme, color, topic, _session_id) -> tuple[str, str, s
     trace_id = langfuse_context.get_current_trace_id()
 
     [documents], [metadatas] = retrive_files_from_db(topic)
-    prompt = get_prompt(theme, color)
 
-    for passage, metas in zip(documents, metadatas):
-        passage_oneline = passage.replace("\n", " ")
-        images_passage = metas["images_passage"]
-
-        prompt += f"PASSAGE: {passage_oneline}\n"
-        prompt += f"IMAGES: {images_passage}\n"
+    prompt = build_prompt(documents, metadatas)
 
     work_dir = create_output_folder()
     # Generate the presentation code
     model_name = "gemini-2.0-flash"
     LOGGER.info("⭐️ Generating response...")
-    answer = client.models.generate_content(model=model_name, contents=prompt)
+    answer = client.models.generate_content(
+        model=model_name,
+        contents=prompt,
+        config={
+            "response_mime_type": "application/json",
+            "response_schema": Presentation,
+        },
+    )
     langfuse_context.update_current_observation(
         output={
             "model_name": model_name,
@@ -57,11 +57,11 @@ def generate_presentation(theme, color, topic, _session_id) -> tuple[str, str, s
     LOGGER.info("🎲 Generated the response using: %s", model_name)
 
     find_used_gfx(answer, work_dir, metadatas)
-    compilation_status = compile_presentation(answer.text, work_dir)
+    latex_code = json_to_tex(answer.text, theme, color)
+    compilation_status = compile_presentation(latex_code, work_dir)
 
     # delete_uploaded_files(uploaded_files)
 
     if compilation_status:
         return compilation_status, trace_id, work_dir
-    else:
-        return "❌ Unknown critial error. Please try again later.", trace_id, work_dir
+    return "❌ Unknown critial error. Please try again later.", trace_id, work_dir

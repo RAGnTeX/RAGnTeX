@@ -1,10 +1,10 @@
 """Database module for user-uploaded files."""
 
+import chromadb
+from chromadb import Documents, EmbeddingFunction, Embeddings
+from google import genai
 from google.api_core import retry
 from google.genai import types
-from google import genai
-from chromadb import Documents, EmbeddingFunction, Embeddings
-import chromadb
 
 from ..services import client
 
