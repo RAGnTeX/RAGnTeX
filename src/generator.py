@@ -14,7 +14,7 @@ LOGGER = Logger.get_logger()
 
 
 @observe(name="🧑‍🎨 generate_presentation")
-def generate_presentation(theme, color, topic, _session_id) -> tuple[str, str, str]:
+def generate_presentation(theme, color, topic, session_id) -> tuple[str, str, str]:
     """Main function to generate a presentation based on the provided theme, color, and topic.
     Args:
         theme (str): The theme of the presentation, chosen by user via UI, defaults to "default".
@@ -31,11 +31,11 @@ def generate_presentation(theme, color, topic, _session_id) -> tuple[str, str, s
 
     trace_id = langfuse_context.get_current_trace_id()
 
-    [documents], [metadatas] = retrive_files_from_db(topic)
+    [documents], [metadatas] = retrive_files_from_db(topic, session_id)
 
     prompt = build_prompt(documents, metadatas)
 
-    work_dir = create_output_folder()
+    work_dir = create_output_folder(session_id)
     # Generate the presentation code
     model_name = "gemini-2.0-flash"
     LOGGER.info("⭐️ Generating response...")
