@@ -6,6 +6,8 @@ import threading
 from typing import Callable, Any
 from functools import wraps
 from ..telemetry.logging_utils import Logger
+from .manage_files import delete_files
+from ..database import clean_db
 
 LOGGER = Logger.get_logger()
 
@@ -57,9 +59,12 @@ def watch_session(session_id, timeout=600) -> None:
         if not session:
             break
         if time.time() - session["last_active"] > timeout:
+            LOGGER.info("🕒 Session expired, ID: %s", session_id)
             del session_data[session_id]
+            time.sleep(10)
+            delete_files(session_id)
+            clean_db(session_id)
             LOGGER.info("🧹 Deleted session with ID: %s", session_id)
-            # Whatever will be deleted later, we could delay it a little bit
             break
 
 
@@ -71,8 +76,8 @@ def update_session(session_id) -> None:
     Args:
         session_id (str): The ID of the session to update.
     """
+
     if session_id in session_data:
-        print(f"Updating activity for session ID: {session_id}")
         session_data[session_id]["last_active"] = time.time()
 
 

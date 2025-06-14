@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+from pathlib import Path
 
 from langfuse.decorators import langfuse_context, observe
 
@@ -36,18 +37,18 @@ def compile_presentation(latex_code, work_dir) -> str:
         LOGGER.info(file)
 
     # Compile with pdflatex (using subprocess instead of `!`)
-    os.chdir(work_dir)  # Change working directory
-
     try:
         # Run pdflatex twice to ensure proper slide enumeration
         subprocess.run(
             ["pdflatex", "-interaction=nonstopmode", "presentation.tex"],
+            cwd=work_dir,
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
         subprocess.run(
             ["pdflatex", "-interaction=nonstopmode", "presentation.tex"],
+            cwd=work_dir,
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -59,7 +60,8 @@ def compile_presentation(latex_code, work_dir) -> str:
             output={"pdf.success": False, "pdf.error_log": e.stderr.decode()}
         )
         # Check for PDF output
-        if not os.path.exists("presentation.pdf"):
+        pdf_file = Path(work_dir) / "presentation.pdf"
+        if not pdf_file.exists:
             LOGGER.error(
                 "❌ PDF generation failed and no PDF file found. Here's the log: %s",
                 e.stderr.decode(),
@@ -74,7 +76,8 @@ def compile_presentation(latex_code, work_dir) -> str:
         )
 
     # Success, but still check for PDF output
-    if not os.path.exists("presentation.pdf"):
+    pdf_file = Path(work_dir) / "presentation.pdf"
+    if not pdf_file.exists:
         langfuse_context.update_current_observation(
             output={
                 "pdf.success": False,

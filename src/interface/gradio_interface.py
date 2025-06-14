@@ -7,14 +7,13 @@ import gradio as gr
 
 from ..generator import generate_presentation
 from ..telemetry import submit_feedback
-from .download_files import download_files
-from .upload_files import upload_files
+from .manage_files import upload_files, download_files
 from .session_manager import create_session, with_update_session, check_session_status
 
-SESSION_TIMEOUT = 30 #600
+SESSION_TIMEOUT = 900
 
 
-def upload_and_update_list(files: list, uploaded_list, _session_id) -> tuple[str, list[str]]:
+def upload_and_update_list(files: list, uploaded_list, session_id) -> tuple[str, list[str]]:
     """Helper function to handle uploaded documents and update the list of uploaded files.
     Args:
         files (list): List of file-like objects to be uploaded.
@@ -25,7 +24,7 @@ def upload_and_update_list(files: list, uploaded_list, _session_id) -> tuple[str
             - str: Status message indicating the result of the upload operation.
             - list[str]: Updated list of uploaded file paths."""
 
-    status, new_paths = upload_files(files)
+    status, new_paths = upload_files(files, session_id)
     updated_list = uploaded_list + [p for p in new_paths if p not in uploaded_list]
 
     return status, updated_list
@@ -437,7 +436,10 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
 
     compilation_status.change(
         fn=download_files,
-        inputs=presentation_folder_state,
+        inputs=[
+            presentation_folder_state,
+            session_id,
+        ],
         outputs=pdf_output,
     )
 
