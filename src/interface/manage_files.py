@@ -1,7 +1,8 @@
-"""Module to handle file uploads via UI."""
+"""Module to handle file uploads and downloads via UI."""
 
 import re
 import shutil
+import zipfile
 from pathlib import Path
 
 from ..database import ingest_files_to_db
@@ -10,10 +11,11 @@ from ..telemetry.logging_utils import Logger
 LOGGER = Logger.get_logger()
 
 
-def upload_files(files: list) -> tuple[str, list[str]]:
+def upload_files(files: list, session_id: str) -> tuple[str, list[str]]:
     """Upload files and save them in the temporary directory.
     Args:
         files (list): List of file-like objects to be uploaded.
+        session_id (str): Unique identifier for the current session.
     Returns:
         str: Message indicating the result of the upload operation.
         list[str]: List of saved file paths.
@@ -21,9 +23,7 @@ def upload_files(files: list) -> tuple[str, list[str]]:
     if not files:
         return "❌ No new files selected", []
 
-    current_file = Path(__file__).resolve()
-    project_root = current_file.parents[2]  # utils → src → PROJECT ROOT
-    upload_dir = project_root / "uploaded_docs"
+    upload_dir = Path.cwd() / "tmp" / session_id
     upload_dir.mkdir(parents=True, exist_ok=True)
 
     messages = []
@@ -57,7 +57,7 @@ def upload_files(files: list) -> tuple[str, list[str]]:
             messages.append(f"❌ Error uploading {file_name}: {e}")
 
     if saved_paths:
-        failed = ingest_files_to_db(saved_paths)
+        failed = ingest_files_to_db(saved_paths, session_id)
         if failed:
             messages.append(
                 f"⚠️ Failed to process files: {', '.join(Path(f).name for f in failed)}"
@@ -70,3 +70,39 @@ def upload_files(files: list) -> tuple[str, list[str]]:
             LOGGER.info("🛠️ All files processed successfully!")
 
     return "\n".join(messages), saved_paths
+
+
+def download_files(folder_path, session_id) -> str:
+    """Prepare downloadable zip archive from the specified folder path."""
+
+    if not folder_path:
+        return "No folder path provided."
+
+    folder = Path(folder_path)
+    zip_path = Path.cwd() / "tmp" / session_id / "presentation.zip"
+
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for file in folder.rglob("*"):
+            if file.is_file() and file != zip_path:
+                arcname = Path("presentation") / file.relative_to(folder)
+                zipf.write(file, arcname=arcname)
+    LOGGER.info("📦 Created zip archive at %s", zip_path)
+
+    return str(zip_path)
+
+
+def delete_files(session_id: str) -> None:
+    """Delete all files in the specified session's temporary directory."""
+
+    upload_dir = Path.cwd() / "tmp" / session_id
+
+    if not upload_dir.exists():
+        return
+
+    try:
+        shutil.rmtree(upload_dir)
+        LOGGER.info("🗑️ Deleted folder: %s", upload_dir)
+        return
+    except Exception as e:
+        LOGGER.error("❌ Error deleting: %s", upload_dir, exc_info=e)
+        return

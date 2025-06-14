@@ -2,8 +2,7 @@
 .DS_Store
 activate_poetry.sh
 run_docker.sh
-uploaded_docs/*
-output/*
+tmp/*
 
 # Sphinx build directory
 docs/_build/
