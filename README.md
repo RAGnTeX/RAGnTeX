@@ -43,6 +43,18 @@ The model outputs fully formatted compilable LaTeX code following a clear and co
 
 It also incorporates relevant images extracted from the documents, organizing them into LaTeX Beamer-friendly layouts (e.g., *Core Idea 2* and *Core Idea 3* slide formats).
 
+### Prerequisites
+
+This project requires the LaTeX toolchain, specifically `pdflatex`, to generate PDF presentations.
+
+Please install it before running the project:
+
+### On Debian/Ubuntu:
+
+```bash
+sudo apt-get update && sudo apt-get install -y texlive-latex-base texlive-fonts-recommended texlive-latex-extra
+
+
 ### Run docker:
 ```bash
 docker run \

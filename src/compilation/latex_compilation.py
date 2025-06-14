@@ -45,14 +45,14 @@ def compile_presentation(latex_code, work_dir) -> str:
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-        )
+        )  # nosec B603 B607 - fixed command, no untrusted input
         subprocess.run(
             ["pdflatex", "-interaction=nonstopmode", "presentation.tex"],
             cwd=work_dir,
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-        )
+        )  # nosec B603 B607 - fixed command, no untrusted input
 
     except subprocess.CalledProcessError as e:
         # Handle error in case of failed LaTeX compilation

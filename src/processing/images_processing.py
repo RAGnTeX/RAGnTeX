@@ -97,7 +97,7 @@ def extract_images(pdf, doc, page, page_num) -> list[dict]:
         xref = img[0]
         base_image = doc.extract_image(xref)
         image_bytes = base_image["image"]
-        image_hash = hashlib.md5(image_bytes).hexdigest()
+        image_hash = hashlib.md5(image_bytes, usedforsecurity=False).hexdigest()
         image_name = f"doc{pdf}_page{page_num}_img{img_index}_hash{image_hash[:8]}.png"
 
         # Find the bbox
@@ -339,7 +339,7 @@ def extract_vector(pdf, page, page_num) -> list[dict]:
             scale_mat = fitz.Matrix(ZOOM, ZOOM)
             figure_pix = page.get_pixmap(matrix=scale_mat, clip=figure_bbox)
             figure_bytes = figure_pix.tobytes("png")
-            figure_hash = hashlib.md5(figure_bytes).hexdigest()
+            figure_hash = hashlib.md5(figure_bytes, usedforsecurity=False).hexdigest()
             figure_name = (
                 f"doc{pdf}_page{page_num}_fig{group_num}_hash{figure_hash[:8]}.png"
             )
@@ -404,7 +404,7 @@ def save_pdf_images(pdf_path: str, req_imgs: list, images_dir: str) -> bool:
                 xref = img[0]
                 base_image = doc.extract_image(xref)
                 image_bytes = base_image["image"]
-                image_hash = hashlib.md5(image_bytes).hexdigest()
+                image_hash = hashlib.md5(image_bytes, usedforsecurity=False).hexdigest()
 
                 image_found = any(
                     pdf == img["doc"]
@@ -485,7 +485,9 @@ def save_pdf_figures(pdf_path: str, req_figs: list, figures_dir: str) -> bool:
                     scale_mat = fitz.Matrix(ZOOM, ZOOM)
                     figure_pix = page.get_pixmap(matrix=scale_mat, clip=figure_bbox)
                     figure_bytes = figure_pix.tobytes("png")
-                    figure_hash = hashlib.md5(figure_bytes).hexdigest()
+                    figure_hash = hashlib.md5(
+                        figure_bytes, usedforsecurity=False
+                    ).hexdigest()
 
                     figure_found = any(
                         pdf == fig["doc"]
