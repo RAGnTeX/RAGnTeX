@@ -1,4 +1,4 @@
-"""This module provides functionality to convert a JSON LLM output to LaTeX Beamer presentation"""
+"""This module provides functionality to convert a JSON LLM output to LaTeX Beamer presentation."""
 
 import json
 
