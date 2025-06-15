@@ -52,7 +52,7 @@ def generate_presentation(config_dict, session_id) -> tuple[str, str, str]:
 
     [documents], [metadatas] = retrive_files_from_db(config.topic, session_id)
 
-    prompt = build_prompt(documents, metadatas)
+    prompt = build_prompt(documents, metadatas, config.aspect_ratio)
 
     work_dir = create_output_folder(session_id)
     # Generate the presentation code
@@ -75,6 +75,8 @@ def generate_presentation(config_dict, session_id) -> tuple[str, str, str]:
     langfuse_context.update_current_observation(
         output={
             "model_name": model_name,
+            "session_id": session_id,
+            "aspect_ratio": config.aspect_ratio,
             "prompt_length": len(prompt),
             "output.response": answer.text,
         }
