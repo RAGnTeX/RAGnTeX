@@ -1,6 +1,7 @@
 """This module defines the output schema for the LLM output."""
 
-from typing import Literal, Optional, List
+from typing import List, Literal, Optional
+
 from pydantic import BaseModel, Field
 
 

@@ -163,7 +163,7 @@ You must output only a **valid JSON object** with the following fields:
         - "single_image"
     - "image": Optional object, **required only if layout is "two_column" or "single_image"**, with:
         - "path": Exact image path from a predefined list.
-        - "caption": Image caption text. If "None", do not use the image.
+        - "caption": Image caption text. Summarize it in one consize sentence. If "None", do not use the image.
         - "orientation": One of "horizontal", "vertical", or "square". Take it from the image metadata.
 
 **Rules:**
@@ -172,6 +172,7 @@ You must output only a **valid JSON object** with the following fields:
 - Include 2–4 "core_idea" slides.
 - Use **at least one image**.
 - Include images in **at least half of the core idea slides**.
+- Each and every bullet point or phrase must be valid, clear, and easy to understand.
 - Use:
     - "two_column" layout for **vertical** or **square** images.
     - "single_image" layout for **horizontal** images.
