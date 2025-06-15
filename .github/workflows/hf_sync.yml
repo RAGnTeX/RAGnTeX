@@ -15,5 +15,5 @@ jobs:
           lfs: true
       - name: Push to hub
         env:
-          HF_TOKEN: ${{ secrets.HF_SECRET }}
+          HF_SECRET: ${{ secrets.HF_SECRET }}
         run: git push https://eranmi:$HF_SECRET@huggingface.co/spaces/eranmi/RAGnTeX main
