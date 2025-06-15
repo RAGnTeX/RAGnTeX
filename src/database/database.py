@@ -34,6 +34,7 @@ class GeminiEmbeddingFunction(EmbeddingFunction):
         )
         return [e.values for e in response.embeddings]
 
+
 embed_fn = GeminiEmbeddingFunction()
 embed_fn.document_mode = True
 
