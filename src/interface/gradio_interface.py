@@ -7,21 +7,45 @@ import gradio as gr
 
 from ..generator import generate_presentation
 from ..telemetry import submit_feedback
-from .download_files import download_files
-from .upload_files import upload_files
+from .manage_files import download_files, upload_files
+from .session_manager import (check_session_status, create_session,
+                              with_update_session)
+
+SESSION_TIMEOUT = 900
 
 
-def upload_and_update_list(files: list, uploaded_list) -> tuple[str, list[str]]:
+def update_config(key, value, config) -> dict:
+    """Helper function to update configuration settings.
+    These settings will be later used for generate_presentation function.
+
+    Args:
+        key (str): Configuration key to update.
+        value (str): New value for the configuration key.
+        config (dict): Current configuration dictionary.
+
+    Returns:
+            dict: Updated configuration dictionary with the new key-value pair.
+    """
+    config[key] = value
+    return config
+
+
+def upload_and_update_list(
+    files: list, uploaded_list, session_id
+) -> tuple[str, list[str]]:
     """Helper function to handle uploaded documents and update the list of uploaded files.
     Args:
         files (list): List of file-like objects to be uploaded.
         uploaded_list (list): Current list of uploaded file paths.
+        session_id (str): Unique identifier for the current session.
     Returns:
         tuple: A 2-element tuple:
             - str: Status message indicating the result of the upload operation.
             - list[str]: Updated list of uploaded file paths."""
-    status, new_paths = upload_files(files)
+
+    status, new_paths = upload_files(files, session_id)
     updated_list = uploaded_list + [p for p in new_paths if p not in uploaded_list]
+
     return status, updated_list
 
 
@@ -32,6 +56,7 @@ def generate_iframe(folder_path) -> str:
     Returns:
         str: HTML string containing the iframe to display the PDF.
     """
+
     file_path = f"{folder_path}/presentation.pdf"
     if not file_path:
         return ""
@@ -43,6 +68,7 @@ def generate_iframe(folder_path) -> str:
         style="position:absolute; top:0; left:0; width:100%; height:100%; border:none;">
         </iframe></div>
     """
+
     return pdf_display
 
 
@@ -81,19 +107,69 @@ theme = gr.themes.Monochrome(
     ),
 ).set(body_background_fill="*neutral_50", body_text_color="*neutral_950")
 
-JS_FUNC = """
-function refresh() {
-    const url = new URL(window.location);
 
+# Additional JavaScript to handle session management and UI updates
+JS_FUNC = r"""
+() => {
+    // Force light theme
+    const url = new URL(window.location);
     if (url.searchParams.get('__theme') !== 'light') {
         url.searchParams.set('__theme', 'light');
         window.location.href = url.href;
     }
-}
+
+    const overlayDiv = document.createElement("div");
+    overlayDiv.id = "session-overlay";
+    overlayDiv.style = `
+        display: flex;
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        font-size: 1.5rem;
+        text-align: center;
+        z-index: 999999;
+    `;
+    overlayDiv.innerHTML = `
+        ❌ Session expired.<br/>🔄 Please refresh the page to start over.
+    `;
+
+    const checker = setInterval(() => {
+        const checkBtn = document.querySelector('#check-session-button');
+        if (checkBtn) checkBtn.click();
+
+        const statusBox = document.querySelector('#session-status textarea');
+        if (!statusBox) return;
+
+        const value = statusBox.value;
+
+        if (value === "expired") {
+            document.body.appendChild(overlayDiv);
+            console.log("Session expired, please refresh the page.");
+
+            clearInterval(checker);
+        }
+    }, 5000);
+
+    }
 """
 
 
 with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
+    # Session management
+    session_id_state = gr.State()
+    session_timeout = gr.State(SESSION_TIMEOUT)
+    status_output = gr.Textbox(visible=False, elem_id="session-status")
+    check_btn = gr.Button(visible=False, elem_id="check-session-button")
+    check_btn.click(
+        fn=check_session_status,
+        inputs=[session_id_state],
+        outputs=[status_output],
+    )
+    ###
+
     uploaded_files_state = gr.State([])
     presentation_folder_state = gr.State("")
 
@@ -192,7 +268,33 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
             )
             upload_button = gr.Button("Upload Files", variant="primary")
 
-            gr.Markdown("## 🎨 Step 2: Choose the presentation and color themes")
+            gr.Markdown("## 🎨 Step 2: Choose the parameters")
+            config_state = gr.State({})
+            model_state = gr.State("default")
+            model_radio = gr.Radio(
+                ["gemini-2.0-flash", "gemini-2.5-flash-preview-05-20"],
+                label="LLM",
+                info="Choose Gemini version",
+                value="gemini-2.0-flash",
+            )
+            model_radio.change(
+                fn=lambda value, config: update_config("model_name", value, config),
+                inputs=[model_radio, config_state],  # only real components here
+                outputs=config_state,
+            )
+
+            aspect_ratio_radio = gr.Radio(
+                ["16:9", "4:3"],
+                label="Aspect Ratio",
+                info="Choose presentation aspect ratio",
+                value="16:9",
+            )
+
+            aspect_ratio_radio.change(
+                fn=lambda value, config: update_config("aspect_ratio", value, config),
+                inputs=[aspect_ratio_radio, config_state],  # only real components here
+                outputs=config_state,
+            )
             presentation_theme_state = gr.State("default")
             theme_dropdown = gr.Dropdown(
                 choices=[
@@ -227,12 +329,11 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
                 value="default",  # default option
                 label="Choose a presentation theme",
             )
-            # output = gr.Textbox()
 
             theme_dropdown.change(
-                fn=lambda val: val,
-                inputs=theme_dropdown,
-                outputs=presentation_theme_state,
+                fn=lambda value, config: update_config("theme", value, config),
+                inputs=[theme_dropdown, config_state],  # only real components here
+                outputs=config_state,
             )
             color_theme_state = gr.State("default")
             color_dropdown = gr.Dropdown(
@@ -256,11 +357,11 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
                 value="default",  # default option
                 label="Choose a color theme",
             )
-            # output = gr.Textbox()
+
             color_dropdown.change(
-                fn=lambda val: val,
-                inputs=color_dropdown,
-                outputs=color_theme_state,
+                fn=lambda value, config: update_config("color_theme", value, config),
+                inputs=[color_dropdown, config_state],  # only real components here
+                outputs=config_state,
             )
 
             gr.Markdown("## 🧠 Step 3: Enter Presentation Topic")
@@ -268,6 +369,11 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
                 label="Presentation Topic",
                 placeholder="e.g., Introduction to Quantum Computing",
                 lines=1,
+            )
+            topic_input.change(
+                fn=lambda value, config: update_config("topic", value, config),
+                inputs=[topic_input, config_state],  # only real components here
+                outputs=config_state,
             )
             submit_topic_button = gr.Button("Generate Presentation", variant="primary")
 
@@ -349,26 +455,36 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
                 """
             )
 
+    # Event handlers
+
+    demo.load(
+        fn=create_session,
+        inputs=session_timeout,
+        outputs=session_id_state,
+    )
+
     upload_button.click(
-        fn=upload_and_update_list,
-        inputs=[file_input, uploaded_files_state],
+        fn=with_update_session(upload_and_update_list),
+        inputs=[file_input, uploaded_files_state, session_id_state],
         outputs=[upload_output, uploaded_files_state],
     )
 
     trace_id_state = gr.State("")
     submit_topic_button.click(
-        fn=generate_presentation,
+        fn=with_update_session(generate_presentation),
         inputs=[
-            presentation_theme_state,
-            color_theme_state,
-            topic_input,
+            config_state,
+            session_id_state,
         ],
         outputs=[compilation_status, trace_id_state, presentation_folder_state],
     )
 
     compilation_status.change(
         fn=download_files,
-        inputs=presentation_folder_state,
+        inputs=[
+            presentation_folder_state,
+            session_id_state,
+        ],
         outputs=pdf_output,
     )
 
@@ -379,7 +495,12 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
     )
 
     submit_feedback_button.click(
-        fn=submit_feedback,
-        inputs=[rating, feedback_comment, trace_id_state],
+        fn=with_update_session(submit_feedback),
+        inputs=[
+            rating,
+            feedback_comment,
+            trace_id_state,
+            session_id_state,
+        ],
         outputs=feedback_output,
     )

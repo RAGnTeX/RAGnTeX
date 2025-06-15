@@ -2,8 +2,17 @@
 .DS_Store
 activate_poetry.sh
 run_docker.sh
-uploaded_docs/*
-output/*
+tmp/*
+
+# Sphinx build directory
+docs/_build/
+
+# Auto-generated static/template folders
+docs/_static/
+docs/_templates/
+
+# Catch-all for any other underscored dirs in docs/
+docs/_*/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

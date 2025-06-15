@@ -35,11 +35,7 @@ class GeminiEmbeddingFunction(EmbeddingFunction):
         return [e.values for e in response.embeddings]
 
 
-DB_NAME = "ragntex"
-
 embed_fn = GeminiEmbeddingFunction()
 embed_fn.document_mode = True
 
 chroma_client = chromadb.Client()
-# chroma_client.delete_collection(DB_NAME)
-db = chroma_client.get_or_create_collection(name=DB_NAME, embedding_function=embed_fn)
