@@ -159,13 +159,13 @@ JS_FUNC = r"""
 
 with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
     # Session management
-    session_id = gr.State()
+    session_id_state = gr.State()
     session_timeout = gr.State(SESSION_TIMEOUT)
     status_output = gr.Textbox(visible=False, elem_id="session-status")
     check_btn = gr.Button(visible=False, elem_id="check-session-button")
     check_btn.click(
         fn=check_session_status,
-        inputs=[session_id],
+        inputs=[session_id_state],
         outputs=[status_output],
     )
     ###
@@ -329,13 +329,6 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
                 value="default",  # default option
                 label="Choose a presentation theme",
             )
-            # output = gr.Textbox()
-
-            # theme_dropdown.change(
-            #     fn=lambda val: val,
-            #     inputs=theme_dropdown,
-            #     outputs=presentation_theme_state,
-            # )
 
             theme_dropdown.change(
                 fn=lambda value, config: update_config("theme", value, config),
@@ -364,12 +357,6 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
                 value="default",  # default option
                 label="Choose a color theme",
             )
-            # output = gr.Textbox()
-            # color_dropdown.change(
-            #     fn=lambda val: val,
-            #     inputs=color_dropdown,
-            #     outputs=color_theme_state,
-            # )
 
             color_dropdown.change(
                 fn=lambda value, config: update_config("color_theme", value, config),
@@ -473,12 +460,12 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
     demo.load(
         fn=create_session,
         inputs=session_timeout,
-        outputs=session_id,
+        outputs=session_id_state,
     )
 
     upload_button.click(
         fn=with_update_session(upload_and_update_list),
-        inputs=[file_input, uploaded_files_state, session_id],
+        inputs=[file_input, uploaded_files_state, session_id_state],
         outputs=[upload_output, uploaded_files_state],
     )
 
@@ -487,7 +474,7 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
         fn=with_update_session(generate_presentation),
         inputs=[
             config_state,
-            session_id,
+            session_id_state,
         ],
         outputs=[compilation_status, trace_id_state, presentation_folder_state],
     )
@@ -496,7 +483,7 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
         fn=download_files,
         inputs=[
             presentation_folder_state,
-            session_id,
+            session_id_state,
         ],
         outputs=pdf_output,
     )
@@ -513,7 +500,7 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
             rating,
             feedback_comment,
             trace_id_state,
-            session_id,
+            session_id_state,
         ],
         outputs=feedback_output,
     )

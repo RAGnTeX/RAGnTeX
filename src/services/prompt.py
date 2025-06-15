@@ -192,6 +192,7 @@ def build_prompt(documents, metadatas, aspect_ratio) -> str:
     Args:
         documents (list): List of document passages.
         metadatas (list): List of metadata dictionaries corresponding to the documents.
+        aspect_ratio (str): The desired aspect ratio for the presentation, e.g., "16:9".
     Returns:
         str: The complete prompt string ready for LLM input.
     """

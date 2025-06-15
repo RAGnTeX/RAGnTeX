@@ -2,7 +2,8 @@
 
 from .gradio_interface import demo
 from .manage_files import delete_files, download_files, upload_files
-from .session_manager import check_session_status, create_session, with_update_session
+from .session_manager import (check_session_status, create_session,
+                              with_update_session)
 
 __all__ = [
     "demo",
