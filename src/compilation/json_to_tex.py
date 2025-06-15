@@ -11,11 +11,13 @@ def render_content(content: list[str], content_format: str) -> str:
     Returns:
         str: LaTeX formatted content.
     """
+    # Remove blank or whitespace-only entries
+    filtered_content = [c.strip() for c in content if c.strip()]
     if content_format == "text":
-        return "\n\n".join(content)
+        return "\n\n".join(filtered_content)
     return (
         "\\begin{itemize}\n"
-        + "\n".join(f"\\item {c}" for c in content)
+        + "\n".join(f"\\item {c}" for c in filtered_content)
         + "\n\\end{itemize}"
     )
 

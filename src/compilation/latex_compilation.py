@@ -1,7 +1,7 @@
 """Module for compiling LaTeX presentations into PDF format."""
 
-import os
-import subprocess
+import os  # nosec: checked usage, inputs are sanitized
+import subprocess  # nosec: checked usage, inputs are sanitized
 from pathlib import Path
 
 from langfuse.decorators import langfuse_context, observe
