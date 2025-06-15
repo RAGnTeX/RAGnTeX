@@ -2,7 +2,7 @@
 
 from langfuse.decorators import langfuse_context, observe
 
-from src.compilation import compile_presentation, json_to_tex
+from src.compilation import compile_presentation, json_to_tex, replace_unicode_greek
 
 # from datetime import datetime
 from src.database import retrive_files_from_db
@@ -58,9 +58,8 @@ def generate_presentation(theme, color, topic, session_id) -> tuple[str, str, st
 
     find_used_gfx(answer, work_dir, metadatas)
     latex_code = json_to_tex(answer.text, theme, color)
+    latex_code = replace_unicode_greek(latex_code)
     compilation_status = compile_presentation(latex_code, work_dir)
-
-    # delete_uploaded_files(uploaded_files)
 
     if compilation_status:
         return compilation_status, trace_id, work_dir
