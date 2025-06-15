@@ -11,6 +11,7 @@ if os.getenv("IN_DOCKER") == "true":
     demo.launch(
         server_name="0.0.0.0",  # nosec: intentional bind all interfaces for HuggingFace Spaces
         server_port=7860,
+        share=True,
     )
 else:
-    demo.launch()
+    demo.launch(share=True)
