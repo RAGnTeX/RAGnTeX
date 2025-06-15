@@ -61,7 +61,7 @@ def compile_presentation(latex_code, work_dir) -> str:
         )
         # Check for PDF output
         pdf_file = Path(work_dir) / "presentation.pdf"
-        if not pdf_file.exists:
+        if not pdf_file.exists():
             LOGGER.error(
                 "❌ PDF generation failed and no PDF file found. Here's the log: %s",
                 e.stderr.decode(),
@@ -77,7 +77,7 @@ def compile_presentation(latex_code, work_dir) -> str:
 
     # Success, but still check for PDF output
     pdf_file = Path(work_dir) / "presentation.pdf"
-    if not pdf_file.exists:
+    if not pdf_file.exists():
         langfuse_context.update_current_observation(
             output={
                 "pdf.success": False,

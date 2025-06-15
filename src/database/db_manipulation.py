@@ -19,7 +19,9 @@ def ingest_files_to_db(pdf_files, session_id) -> list[str]:
         session_id (str): Unique identifier for the current session.
     """
     # Get or create the database collection
-    db = chroma_client.get_or_create_collection(name=session_id, embedding_function=embed_fn)
+    db = chroma_client.get_or_create_collection(
+        name=session_id, embedding_function=embed_fn
+    )
 
     # Get all the existing entries and extract the known filenames
     all_entries = db.get(include=["metadatas"]) or []
@@ -61,7 +63,9 @@ MetadataBatch = List[List[Metadata]]
 
 
 @observe(name="🔍 retrieve_files_from_db")
-def retrive_files_from_db(topic: str, session_id: str) -> tuple[DocumentsBatch, MetadataBatch]:
+def retrive_files_from_db(
+    topic: str, session_id: str
+) -> tuple[DocumentsBatch, MetadataBatch]:
     """Retrieve relevant documents from the database based on the provided topic.
     Args:
         topic (str): The topic for which to retrieve documents.
@@ -72,7 +76,9 @@ def retrive_files_from_db(topic: str, session_id: str) -> tuple[DocumentsBatch, 
             - list[dict]: List of metadata associated with the documents.
     """
     # Get or create the database collection
-    db = chroma_client.get_or_create_collection(name=session_id, embedding_function=embed_fn)
+    db = chroma_client.get_or_create_collection(
+        name=session_id, embedding_function=embed_fn
+    )
     if not db:
         LOGGER.error("❌ Database collection not found or could not be created.")
         return [], []
@@ -101,9 +107,13 @@ def clean_db(session_id: str) -> None:
     Args:
         session_id (str): Unique identifier for the current session.
     """
-    db = chroma_client.get_or_create_collection(name=session_id, embedding_function=embed_fn)
+    db = chroma_client.get_or_create_collection(
+        name=session_id, embedding_function=embed_fn
+    )
     if db:
         chroma_client.delete_collection(name=session_id)
         LOGGER.info("🗑️ Cleaning database for session ID: %s", session_id)
     else:
-        LOGGER.warning("❌ Database collection not found for session ID: %s", session_id)
+        LOGGER.warning(
+            "❌ Database collection not found for session ID: %s", session_id
+        )
