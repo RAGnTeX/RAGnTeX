@@ -1,6 +1,8 @@
 """Module contatining the master prompt."""
 
 
+# This is an AI prompt template, not a SQL statement.
+# Bandit flagged it mistakenly as a possible SQL injection.
 def get_prompt(
     presentation_theme: str = "default", color_theme: str = "default"
 ) -> str:
@@ -120,18 +122,20 @@ def get_prompt(
     - Skip any image with caption `"None"`.
     - Use **Core Idea 2** layout for **vertical** and **square** images.
     - Use **Core Idea 3** layout for **horizontal** images
-    (when a two-column layout is not suitable).\n\n"""
+    (when a two-column layout is not suitable).\n\n"""  # nosec B608
 
     return prompt
 
 
-def get_prompt_json() -> str:
+def get_prompt_json(aspect_ratio: str = "16:9") -> str:
     """
     JSON-based prompt for structured LLM output.
+    Args:
+        aspect_ratio (str): The desired aspect ratio for the presentation, e.g., "16:9".
     Returns:
         str: The JSON prompt string for generating a structured presentation.
     """
-    return """
+    return f"""
 You are a presentation assistant that creates clear, concise, and engaging presentation structures in JSON format.
 
 You must output only a **valid JSON object** with the following fields:
@@ -161,7 +165,7 @@ You must output only a **valid JSON object** with the following fields:
         - "single_image"
     - "image": Optional object, **required only if layout is "two_column" or "single_image"**, with:
         - "path": Exact image path from a predefined list.
-        - "caption": Image caption text. If "None", do not use the image.
+        - "caption": Image caption text. Summarize it in one consize sentence. If "None", do not use the image.
         - "orientation": One of "horizontal", "vertical", or "square". Take it from the image metadata.
 
 **Rules:**
@@ -170,26 +174,29 @@ You must output only a **valid JSON object** with the following fields:
 - Include 2–4 "core_idea" slides.
 - Use **at least one image**.
 - Include images in **at least half of the core idea slides**.
+- Each and every bullet point or phrase must be valid, clear, and easy to understand.
 - Use:
     - "two_column" layout for **vertical** or **square** images.
     - "single_image" layout for **horizontal** images.
 - Do not use any image with caption `"None"`.
 - Do not invent or modify the image paths.
+- Desired aspect ratio of the presentation is {aspect_ratio}. Your content must be suitable for this aspect ratio.
 
 Return only the JSON object. Do not include any explanations, LaTeX, or Markdown.
 """
 
 
-def build_prompt(documents, metadatas) -> str:
+def build_prompt(documents, metadatas, aspect_ratio) -> str:
     """
     Build the prompt for the LLM based on the provided documents and metadata.
     Args:
         documents (list): List of document passages.
         metadatas (list): List of metadata dictionaries corresponding to the documents.
+        aspect_ratio (str): The desired aspect ratio for the presentation, e.g., "16:9".
     Returns:
         str: The complete prompt string ready for LLM input.
     """
-    prompt = get_prompt_json()
+    prompt = get_prompt_json(aspect_ratio)
     for passage, metas in zip(documents, metadatas):
         passage_oneline = passage.replace("\n", " ")
         prompt += f"PASSAGE: {passage_oneline}\n"

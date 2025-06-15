@@ -38,7 +38,7 @@ class Logger:
         """
         Returns the global logger instance.
         """
+        cls.setup_logging()  # Ensure logging is set up before returning the logger
         if cls._logger is None:
-            cls.setup_logging()  # Ensure logging is set up before returning the logger
-            assert cls._logger is not None
+            raise RuntimeError("Logger was not properly initialized")
         return cls._logger
