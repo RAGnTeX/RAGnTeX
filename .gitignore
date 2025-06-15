@@ -3,6 +3,7 @@
 activate_poetry.sh
 run_docker.sh
 tmp/*
+uploaded_docs/*
 
 # Sphinx build directory
 docs/_build/
