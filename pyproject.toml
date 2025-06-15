@@ -3,11 +3,13 @@ name = "ragntex"
 version = "1.0.0"
 description = "From Text to Visuals: Auto-Generating LaTeX Beamer Presentations with GenAI"
 authors = [
-    {name = "AnnaErsh",email = "aershova096@gmail.com"}
+    {name = "AnnaErsh",email = "aershova096@gmail.com"},
+    {name = "KNiewczas",email = "kajetan.niewczas@gmail.com"}
 ]
 license = {text = "Apache 2.0"}
 readme = "README.md"
-requires-python = ">=3.13"
+packages = [{ include = "src" }]
+requires-python = ">=3.10,<3.11"
 dependencies = [
     "google-genai (==1.11.0)",
     "chromadb (==1.0.5)",
@@ -18,9 +20,26 @@ dependencies = [
     "rtree (>=1.4.0,<2.0.0)",
     "pymupdf (>=1.25.5,<2.0.0)",
     "gradio (>=5.27.1,<6.0.0)",
+    "langfuse (>=2.60.5,<3.0.0)",
+    "pydantic (>=2.6.0,<2.10.0)",
+    "rsa (>=4.7,<5.0)",
 ]
 
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+pylint = "^3.3.7"
+black = "^25.1.0"
+pytest = "^8.4.0"
+mypy = "^1.16.0"
+isort = "^6.0.1"
+safety = "^3.5.2"
+bandit = "^1.8.3"
+
+
+[tool.poetry.group.docs.dependencies]
+sphinx-autodoc-typehints = "1.22"
+furo = "^2024.8.6"
