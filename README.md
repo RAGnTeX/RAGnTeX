@@ -1,3 +1,12 @@
+---
+title: RAGnTeX
+emoji: 📄
+colorFrom: indigo
+colorTo: pink
+sdk: docker
+pinned: false
+---
+
 # 📚 From Text to Visuals: Auto-Generating LaTeX Beamer Presentations with GenAI
 
 In this project, we explore how generative AI can automate the creation of professional-looking presentation slides—directly from extensive collections of PDF documents.
