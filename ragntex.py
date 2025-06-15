@@ -9,7 +9,7 @@ _ = init_telemetry()
 
 # Run Gradio
 if os.getenv("IN_DOCKER") == "true":
-    os.chdir("/cache")
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
     demo.launch(
         server_name="0.0.0.0",  # nosec: intentional bind all interfaces for HuggingFace Spaces
         server_port=7860,
