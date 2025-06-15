@@ -1,13 +1,14 @@
 """Session Manager Module"""
 
-import uuid
-import time
 import threading
-from typing import Callable, Any
+import time
+import uuid
 from functools import wraps
+from typing import Any, Callable
+
+from ..database import clean_db
 from ..telemetry.logging_utils import Logger
 from .manage_files import delete_files
-from ..database import clean_db
 
 LOGGER = Logger.get_logger()
 
@@ -109,4 +110,14 @@ def with_update_session(fn: Callable[..., Any]) -> Callable[..., Any]:
 
 
 def check_session_status(session_id: str) -> str:
+    """Check if a session is active or expired.
+    This function checks if the provided session ID exists in the session data.
+    If it exists, the session is considered active; otherwise, it is expired.
+
+    Args:
+        session_id (str): The ID of the session to check.
+
+    Returns:
+        str: "active" if the session is active, "expired" if it is not.
+    """
     return "active" if session_id in session_data else "expired"

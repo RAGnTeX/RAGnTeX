@@ -7,13 +7,32 @@ import gradio as gr
 
 from ..generator import generate_presentation
 from ..telemetry import submit_feedback
-from .manage_files import upload_files, download_files
-from .session_manager import create_session, with_update_session, check_session_status
+from .manage_files import download_files, upload_files
+from .session_manager import (check_session_status, create_session,
+                              with_update_session)
 
 SESSION_TIMEOUT = 900
 
 
-def upload_and_update_list(files: list, uploaded_list, session_id) -> tuple[str, list[str]]:
+def update_config(key, value, config) -> dict:
+    """Helper function to update configuration settings.
+    These settings will be later used for generate_presentation function.
+
+    Args:
+        key (str): Configuration key to update.
+        value (str): New value for the configuration key.
+        config (dict): Current configuration dictionary.
+
+    Returns:
+            dict: Updated configuration dictionary with the new key-value pair.
+    """
+    config[key] = value
+    return config
+
+
+def upload_and_update_list(
+    files: list, uploaded_list, session_id
+) -> tuple[str, list[str]]:
     """Helper function to handle uploaded documents and update the list of uploaded files.
     Args:
         files (list): List of file-like objects to be uploaded.
@@ -63,6 +82,7 @@ def encode_image(image_path) -> str:
     with open(image_path, "rb") as f:
         data = f.read()
         return f"data:image/png;base64,{base64.b64encode(data).decode()}"
+
 
 banner_base64 = encode_image("gfx/long_logo.png")
 logo_base64 = encode_image("gfx/icon_logo.png")
@@ -248,7 +268,33 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
             )
             upload_button = gr.Button("Upload Files", variant="primary")
 
-            gr.Markdown("## 🎨 Step 2: Choose the presentation and color themes")
+            gr.Markdown("## 🎨 Step 2: Choose the parameters")
+            config_state = gr.State({})
+            model_state = gr.State("default")
+            model_radio = gr.Radio(
+                ["gemini-2.0-flash", "gemini-2.5-flash-preview-05-20"],
+                label="LLM",
+                info="Choose Gemini version",
+                value="gemini-2.0-flash",
+            )
+            model_radio.change(
+                fn=lambda value, config: update_config("model_name", value, config),
+                inputs=[model_radio, config_state],  # only real components here
+                outputs=config_state,
+            )
+
+            aspect_ratio_radio = gr.Radio(
+                ["16:9", "4:3"],
+                label="Aspect Ratio",
+                info="Choose presentation aspect ratio",
+                value="16:9",
+            )
+
+            aspect_ratio_radio.change(
+                fn=lambda value, config: update_config("aspect_ratio", value, config),
+                inputs=[aspect_ratio_radio, config_state],  # only real components here
+                outputs=config_state,
+            )
             presentation_theme_state = gr.State("default")
             theme_dropdown = gr.Dropdown(
                 choices=[
@@ -285,10 +331,16 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
             )
             # output = gr.Textbox()
 
+            # theme_dropdown.change(
+            #     fn=lambda val: val,
+            #     inputs=theme_dropdown,
+            #     outputs=presentation_theme_state,
+            # )
+
             theme_dropdown.change(
-                fn=lambda val: val,
-                inputs=theme_dropdown,
-                outputs=presentation_theme_state,
+                fn=lambda value, config: update_config("theme", value, config),
+                inputs=[theme_dropdown, config_state],  # only real components here
+                outputs=config_state,
             )
             color_theme_state = gr.State("default")
             color_dropdown = gr.Dropdown(
@@ -313,10 +365,16 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
                 label="Choose a color theme",
             )
             # output = gr.Textbox()
+            # color_dropdown.change(
+            #     fn=lambda val: val,
+            #     inputs=color_dropdown,
+            #     outputs=color_theme_state,
+            # )
+
             color_dropdown.change(
-                fn=lambda val: val,
-                inputs=color_dropdown,
-                outputs=color_theme_state,
+                fn=lambda value, config: update_config("color_theme", value, config),
+                inputs=[color_dropdown, config_state],  # only real components here
+                outputs=config_state,
             )
 
             gr.Markdown("## 🧠 Step 3: Enter Presentation Topic")
@@ -324,6 +382,11 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
                 label="Presentation Topic",
                 placeholder="e.g., Introduction to Quantum Computing",
                 lines=1,
+            )
+            topic_input.change(
+                fn=lambda value, config: update_config("topic", value, config),
+                inputs=[topic_input, config_state],  # only real components here
+                outputs=config_state,
             )
             submit_topic_button = gr.Button("Generate Presentation", variant="primary")
 
@@ -415,10 +478,7 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
 
     upload_button.click(
         fn=with_update_session(upload_and_update_list),
-        inputs=[
-            file_input,
-            uploaded_files_state,
-            session_id],
+        inputs=[file_input, uploaded_files_state, session_id],
         outputs=[upload_output, uploaded_files_state],
     )
 
@@ -426,9 +486,7 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
     submit_topic_button.click(
         fn=with_update_session(generate_presentation),
         inputs=[
-            presentation_theme_state,
-            color_theme_state,
-            topic_input,
+            config_state,
             session_id,
         ],
         outputs=[compilation_status, trace_id_state, presentation_folder_state],
