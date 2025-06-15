@@ -6,6 +6,7 @@ tmp/*
 uploaded_docs/*
 .ruff_cache/*
 .mypy_cache/*
+docs/_*/*
 
 # Sphinx build directory
 docs/_build/
