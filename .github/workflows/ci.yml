@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: "2.1.1"
+
+      - name: Verify Poetry Installation
+        run: poetry --version
+
+      - name: Install dependencies
+        run: poetry install --with dev
+
+      - name: Run Black and isort
+        run: |
+          poetry run black .
+          poetry run isort .
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "style: Automatic formatting via CI (Black + isort)"
+          branch: ${{ github.head_ref || github.ref_name }}
+          file_pattern: "*.py"
+
+      - name: Run Mypy
+        run: poetry run mypy .
+
+      - name: Run Pylint
+        run: |
+          poetry run pylint . | tee pylint-output.txt
+          score=$(tail -n 2 pylint-output.txt | grep -oP "rated at \K[0-9.]+")
+          echo "Pylint score: $score"
+          awk -v s="$score" 'BEGIN {exit (s >= 9.5) ? 0 : 1}'
+
+      - name: Run Bandit security scan
+        run: poetry run bandit -r src/
+
+      - name: Run Safety vulnerability check (warnings only)
+        run: |
+          poetry run safety check --full-report || true
+
+      - name: Build docs
+        working-directory: docs
+        run: poetry run sphinx-build -b html . _build/html
