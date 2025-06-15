@@ -1,15 +1,16 @@
 """Module to put it all together and manage the generation of a presentation."""
 
 from dataclasses import dataclass
+from typing import Optional
 
 from langfuse.decorators import langfuse_context, observe
 
-from src.compilation import compile_presentation, json_to_tex, replace_unicode_greek
-
+from src.compilation import (compile_presentation, json_to_tex,
+                             replace_unicode_greek)
 # from datetime import datetime
 from src.database import retrive_files_from_db
 from src.processing import create_output_folder, find_used_gfx
-from src.services import Presentation, build_prompt, client, generate_with_retry
+from src.services import build_prompt, client, generate_with_retry
 from src.telemetry import Logger
 
 LOGGER = Logger.get_logger()
@@ -27,19 +28,26 @@ class PresentationConfig:
 
 
 @observe(name="🧑‍🎨 generate_presentation")
-def generate_presentation(config_dict, session_id) -> tuple[str, str, str]:
+def generate_presentation(
+    config_dict, session_id
+) -> tuple[str, Optional[str], Optional[str]]:
     """Main function to generate a presentation based on the provided theme, color, and topic.
+
     Args:
-        theme (str): The theme of the presentation, chosen by user via UI, defaults to "default".
-        color (str): The color scheme for the presentation, chosen by user via UI,
-        defaults to "default".
-        topic (str): The topic of the presentation, set by user via UI, defaults to "default".
+        config_dict (dict): Configuration dictionary containing:
+            - model_name (str): Name of the model to use for generation.
+            - aspect_ratio (str): Aspect ratio for the presentation, e.g., "16:9", "4:3".
+            - theme (str): Beamer theme to use.
+            - color_theme (str): Beamer color theme to use.
+            - topic (str): Topic of the presentation.
         session_id (str): Unique identifier for the current session.
+
     Returns:
-        tuple: A 3-element tuple:
-            - str: Success message.
-            - str: Trace ID for telemetry purposes.
-            - str: Path to the presentation folder.
+    tuple:
+        A 3-element tuple containing:
+        - str: Status message (success or error).
+        - Optional[str]: Trace ID for telemetry purposes, or None if unavailable.
+        - Optional[str]: Path to the presentation folder, or None if unavailable.
     """
     # Cast dict to dataclass
     try:
@@ -58,14 +66,6 @@ def generate_presentation(config_dict, session_id) -> tuple[str, str, str]:
     # Generate the presentation code
     model_name = config.model_name
     LOGGER.info("⭐️ Generating response...")
-    # answer = client.models.generate_content(
-    #     model=model_name,
-    #     contents=prompt,
-    #     config={
-    #         "response_mime_type": "application/json",
-    #         "response_schema": Presentation,
-    #     },
-    # )
     try:
         answer = generate_with_retry(client, model_name, prompt)
     except Exception as e:
