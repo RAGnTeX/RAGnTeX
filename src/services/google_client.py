@@ -14,7 +14,13 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 client = genai.Client(api_key=GOOGLE_API_KEY)
 
 
-def generate_with_retry(client, model_name, prompt, max_retries=3, retry_delay=2):
+def generate_with_retry(
+    client: genai.Client,
+    model_name: str,
+    prompt: str,
+    max_retries: int = 3,
+    retry_delay: int = 2,
+):
 
     answer = None
 
