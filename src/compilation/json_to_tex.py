@@ -20,17 +20,22 @@ def render_content(content: list[str], content_format: str) -> str:
     )
 
 
-def json_to_tex(presentation_json: str, theme: str, color_theme: str) -> str:
+def json_to_tex(
+    presentation_json: str, theme: str, color_theme: str, aspect_ratio: str
+) -> str:
     """Convert a JSON representation of a presentation to LaTeX Beamer format.
     Args:
         presentation (Dict[str, Any]): JSON LLM output of the presentation.
         theme (str): Beamer theme to use.
         color_theme (str): Beamer color theme to use.
+        aspect_ratio (str): Aspect ratio for the presentation, e.g., "16:9", "4:3".
     Returns:
         str: LaTeX Beamer code as a string.
     """
     presentation = json.loads(presentation_json)
-    header = f"""\\documentclass{{beamer}}
+    aspect_ratio_num = 169 if aspect_ratio == "16:9" else 43
+    header = f"""\\documentclass[aspectratio={aspect_ratio_num}]{{beamer}}
+                \\usepackage[utf8]{{inputenc}}
                 \\usetheme{{{theme}}}
                 \\usecolortheme{{{color_theme}}}
                 \\title{{{presentation["title"]}}}
@@ -51,10 +56,10 @@ def json_to_tex(presentation_json: str, theme: str, color_theme: str) -> str:
         content_format = slide.get("content_format", "itemize")
         body = render_content(content, content_format)
 
-        if slide_type == "title":
-            continue
+        # if slide_type == "title":
+        #     continue
 
-        elif slide_type in {"introduction", "summary"}:
+        if slide_type in {"introduction", "summary"}:
             title = "Introduction" if slide_type == "introduction" else "Summary"
             slides.append(
                 f"""\\begin{{frame}}
