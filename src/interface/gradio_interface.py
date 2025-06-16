@@ -58,6 +58,7 @@ def generate_iframe(folder_path) -> str:
     """
 
     file_path = f"{folder_path}/presentation.pdf"
+    print(f"Generating iframe for PDF at: {file_path}")
     if not file_path:
         return ""
     with open(file_path, "rb") as f:
