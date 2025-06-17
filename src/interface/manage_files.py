@@ -21,7 +21,7 @@ def upload_files(files: list, session_id: str) -> tuple[str, list[str]]:
         list[str]: List of saved file paths.
     """
     if not files:
-        return "❌ No new files selected", []
+        return "❌ No new files selected.", []
 
     upload_dir = Path.cwd() / "tmp" / session_id
     upload_dir.mkdir(parents=True, exist_ok=True)
@@ -76,7 +76,7 @@ def download_files(folder_path, session_id) -> str:
     """Prepare downloadable zip archive from the specified folder path."""
 
     if not folder_path:
-        return "No folder path provided."
+        return None
 
     folder = Path(folder_path)
     zip_path = Path.cwd() / "tmp" / session_id / "presentation.zip"

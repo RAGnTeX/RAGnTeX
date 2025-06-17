@@ -60,9 +60,12 @@ def generate_presentation(
 
     [documents], [metadatas] = retrive_files_from_db(config.topic, session_id)
 
+    if not documents or not metadatas:
+        LOGGER.error("❌ No documents found for the topic: %s", config.topic)
+        return "❌ No documents found for the given topic.", trace_id, None
+
     prompt = build_prompt(documents, metadatas, config.aspect_ratio)
 
-    work_dir = create_output_folder(session_id)
     # Generate the presentation code
     model_name = config.model_name
     LOGGER.info("⭐️ Generating response...")
@@ -70,7 +73,7 @@ def generate_presentation(
         answer = generate_with_retry(client, model_name, prompt)
     except Exception as e:
         LOGGER.error("❌ Gemini is not reponding: %s", str(e))
-        return f"Gemini error: {str(e)}", trace_id, work_dir
+        return f"❌ Gemini error: {str(e)}", trace_id, None
 
     langfuse_context.update_current_observation(
         output={
@@ -82,6 +85,8 @@ def generate_presentation(
         }
     )
     LOGGER.info("🎲 Generated the response using: %s", model_name)
+
+    work_dir = create_output_folder(session_id)
 
     find_used_gfx(answer, work_dir, metadatas)
     latex_code = json_to_tex(

@@ -69,13 +69,17 @@ def upload_and_update_list(
 #         </iframe></div>
 #     """
 
-def activate_preview(browser_info: str) -> tuple[gr.update, gr.update]:
+def activate_preview(browser_info: str, presentation_folder_state: str) -> tuple[gr.update, gr.update]:
     """Activate the PDF preview in the viewer component.
     Args:
         browser_info (gr.State): State containing information about the user's browser.
+        presentation_folder_state (str): Path to the folder containing the generated PDF presentation.
     Returns:
         tuple[gr.Update, gr.Update]: Tuple containing updates for the PDF viewer and alert box visibility.
     """
+    if presentation_folder_state is None or not presentation_folder_state:
+        return gr.update(visible=False), gr.update(visible=False)
+
     if "safari" in browser_info.lower() and "chrome" not in browser_info.lower():
         return gr.update(visible=False), gr.update(visible=True)
     else:
@@ -536,12 +540,15 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
     browser_info.change(fn=lambda x: None, inputs=browser_info, outputs=[])
 
     pdf_output.change(
-        fn=lambda folder: f"{folder}/presentation.pdf",
+        fn=lambda folder: f"{folder}/presentation.pdf" if folder is not None else None,
         inputs=presentation_folder_state,
         outputs=pdf_output_viewer,
     ).then(
         fn=activate_preview,
-        inputs=browser_info,
+        inputs=[
+            browser_info,
+            presentation_folder_state
+        ],
         outputs=[
             pdf_output_viewer,
             browser_alert_box
