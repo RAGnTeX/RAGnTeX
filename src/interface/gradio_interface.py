@@ -419,8 +419,13 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
                 label="Download Presentation",
                 interactive=False,
                 elem_id="download-box",
+                file_count="multiple",
             )
-            pdf_output_viewer = PDF(label="Presentation Preview", elem_id="preview-box", visible=False)
+            pdf_output_viewer = PDF(
+                label="Presentation Preview",
+                elem_id="preview-box",
+                visible=False,
+            )
             browser_alert_box = gr.HTML(
                 """
                 <div style="
@@ -525,12 +530,17 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
             config_state,
             session_id_state,
         ],
-        outputs=[compilation_status, trace_id_state, presentation_folder_state],
+        outputs=[
+            compilation_status,
+            trace_id_state,
+            presentation_folder_state
+        ],
     )
 
     compilation_status.change(
         fn=download_files,
         inputs=[
+            compilation_status,
             presentation_folder_state,
             session_id_state,
         ],

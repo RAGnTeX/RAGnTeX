@@ -72,14 +72,31 @@ def upload_files(files: list, session_id: str) -> tuple[str, list[str]]:
     return "\n".join(messages), saved_paths
 
 
-def download_files(folder_path, session_id) -> str:
+def download_files(compilation_status, folder_path, session_id) -> str:
     """Prepare downloadable zip archive from the specified folder path."""
 
     if not folder_path:
         return None
 
     folder = Path(folder_path)
-    zip_path = Path.cwd() / "tmp" / session_id / "presentation.zip"
+    base_dir = Path.cwd() / "tmp" / session_id
+
+    all_zips = [base_dir / "presentation.zip"]
+    all_zips += sorted(base_dir.glob("presentation_*.zip"))
+    all_zips = [str(p) for p in all_zips if p.exists() and p.is_file()]
+    if compilation_status == "":
+        return all_zips
+
+    if all_zips:
+        last_file = Path(all_zips[-1]).name
+        match = re.match(r"presentation_(\d+)\.zip", last_file)
+        if match:
+            next_num = int(match.group(1)) + 1
+        else:
+            next_num = 2
+        zip_path = base_dir / f"presentation_{next_num}.zip"
+    else:
+        zip_path = base_dir / "presentation.zip"
 
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
         # Add gfx folder
@@ -97,7 +114,9 @@ def download_files(folder_path, session_id) -> str:
                 zipf.write(file_path, arcname=arcname)
     LOGGER.info("📦 Created zip archive at %s", zip_path)
 
-    return str(zip_path)
+    all_zips.append(str(zip_path))
+
+    return all_zips
 
 
 def delete_files(session_id: str) -> None:
