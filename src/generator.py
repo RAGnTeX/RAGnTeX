@@ -5,8 +5,13 @@ from typing import Optional
 
 from langfuse.decorators import langfuse_context, observe
 
-from src.compilation import (compile_presentation, escape_latex_special_chars,
-                             json_to_tex, replace_unicode_greek)
+from src.compilation import (
+    compile_presentation,
+    escape_latex_special_chars,
+    json_to_tex,
+    replace_unicode_greek,
+)
+
 # from datetime import datetime
 from src.database import retrive_files_from_db
 from src.processing import create_output_folder, find_used_gfx
@@ -64,7 +69,7 @@ def generate_presentation(
         LOGGER.error("❌ No documents found for the topic: %s", config.topic)
         return "❌ No documents found for the given topic.", trace_id, None
 
-    prompt = build_prompt(documents, metadatas, config.aspect_ratio)
+    prompt = build_prompt(documents, metadatas, config.aspect_ratio, config.topic)
 
     # Generate the presentation code
     model_name = config.model_name

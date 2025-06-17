@@ -127,11 +127,12 @@ def get_prompt(
     return prompt
 
 
-def get_prompt_json(aspect_ratio: str = "16:9") -> str:
+def get_prompt_json(aspect_ratio: str = "16:9", topic: str = "") -> str:
     """
     JSON-based prompt for structured LLM output.
     Args:
         aspect_ratio (str): The desired aspect ratio for the presentation, e.g., "16:9".
+        topic (str): User-defined topic of the presentation, used for context.
     Returns:
         str: The JSON prompt string for generating a structured presentation.
     """
@@ -182,11 +183,11 @@ You must output only a **valid JSON object** with the following fields:
 - Do not invent or modify the image paths.
 - Desired aspect ratio of the presentation is {aspect_ratio}. Your content must be suitable for this aspect ratio.
 
-Return only the JSON object. Do not include any explanations, LaTeX, or Markdown.
+Return only the JSON object. Do not include any explanations, LaTeX, or Markdown. The user-desired topic is "{topic}".
 """
 
 
-def build_prompt(documents, metadatas, aspect_ratio) -> str:
+def build_prompt(documents, metadatas, aspect_ratio, topic) -> str:
     """
     Build the prompt for the LLM based on the provided documents and metadata.
     Args:
@@ -196,7 +197,7 @@ def build_prompt(documents, metadatas, aspect_ratio) -> str:
     Returns:
         str: The complete prompt string ready for LLM input.
     """
-    prompt = get_prompt_json(aspect_ratio)
+    prompt = get_prompt_json(aspect_ratio, topic)
     for passage, metas in zip(documents, metadatas):
         passage_oneline = passage.replace("\n", " ")
         prompt += f"PASSAGE: {passage_oneline}\n"
