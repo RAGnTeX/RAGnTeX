@@ -5,13 +5,8 @@ from typing import Optional
 
 from langfuse.decorators import langfuse_context, observe
 
-from src.compilation import (
-    compile_presentation,
-    json_to_tex,
-    replace_unicode_greek,
-    escape_latex_special_chars,
-)
-
+from src.compilation import (compile_presentation, escape_latex_special_chars,
+                             json_to_tex, replace_unicode_greek)
 # from datetime import datetime
 from src.database import retrive_files_from_db
 from src.processing import create_output_folder, find_used_gfx

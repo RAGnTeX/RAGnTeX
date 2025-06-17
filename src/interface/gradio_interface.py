@@ -2,6 +2,7 @@
 """Gradio UI for the RAG'n'TeX LaTeX Presentation Generator."""
 
 import base64
+from typing import Any
 
 import gradio as gr
 from gradio_pdf import PDF
@@ -9,7 +10,8 @@ from gradio_pdf import PDF
 from ..generator import generate_presentation
 from ..telemetry import submit_feedback
 from .manage_files import download_files, upload_files
-from .session_manager import check_session_status, create_session, with_update_session
+from .session_manager import (check_session_status, create_session,
+                              with_update_session)
 
 SESSION_TIMEOUT = 900
 
@@ -72,7 +74,7 @@ def upload_and_update_list(
 
 def activate_preview(
     browser_info: str, presentation_folder_state: str
-) -> tuple[gr.update, gr.update]:
+) -> tuple[Any, Any]:
     """Activate the PDF preview in the viewer component.
     Args:
         browser_info (gr.State): State containing information about the user's browser.

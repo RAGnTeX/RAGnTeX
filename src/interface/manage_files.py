@@ -72,11 +72,20 @@ def upload_files(files: list, session_id: str) -> tuple[str, list[str]]:
     return "\n".join(messages), saved_paths
 
 
-def download_files(compilation_status, folder_path, session_id) -> str:
-    """Prepare downloadable zip archive from the specified folder path."""
+def download_files(compilation_status, folder_path, session_id) -> list[str]:
+    """Prepare downloadable zip archive from the specified folder path.
+
+    Args:
+        compilation_status (str): Status of the compilation.
+        folder_path (str): Path to the folder containing files to be zipped.
+        session_id (str): Unique identifier for the current session.
+
+    Returns:
+        Optional[str]: Path to the created zip archive or None if folder_path is empty.
+    """
 
     if not folder_path:
-        return None
+        return []
 
     folder = Path(folder_path)
     base_dir = Path.cwd() / "tmp" / session_id
@@ -120,7 +129,10 @@ def download_files(compilation_status, folder_path, session_id) -> str:
 
 
 def delete_files(session_id: str) -> None:
-    """Delete all files in the specified session's temporary directory."""
+    """Delete all files in the specified session's temporary directory.
+    Args:
+        session_id (str): Unique identifier for the current session.
+    """
 
     upload_dir = Path.cwd() / "tmp" / session_id
 
