@@ -7,6 +7,7 @@ static/*
 uploaded_docs/*
 .ruff_cache/*
 .mypy_cache/*
+.gradio/*
 docs/_*/*
 
 # Sphinx build directory
