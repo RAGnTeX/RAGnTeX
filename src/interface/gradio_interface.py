@@ -9,8 +9,7 @@ from gradio_pdf import PDF
 from ..generator import generate_presentation
 from ..telemetry import submit_feedback
 from .manage_files import download_files, upload_files
-from .session_manager import (check_session_status, create_session,
-                              with_update_session)
+from .session_manager import check_session_status, create_session, with_update_session
 
 SESSION_TIMEOUT = 900
 
@@ -32,7 +31,8 @@ def update_config(key, value, config) -> dict:
 
 
 def upload_and_update_list(
-    files: list, uploaded_list, session_id) -> tuple[str, list[str]]:
+    files: list, uploaded_list, session_id
+) -> tuple[str, list[str]]:
     """Helper function to handle uploaded documents and update the list of uploaded files.
     Args:
         files (list): List of file-like objects to be uploaded.
@@ -69,7 +69,10 @@ def upload_and_update_list(
 #         </iframe></div>
 #     """
 
-def activate_preview(browser_info: str, presentation_folder_state: str) -> tuple[gr.update, gr.update]:
+
+def activate_preview(
+    browser_info: str, presentation_folder_state: str
+) -> tuple[gr.update, gr.update]:
     """Activate the PDF preview in the viewer component.
     Args:
         browser_info (gr.State): State containing information about the user's browser.
@@ -530,11 +533,7 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
             config_state,
             session_id_state,
         ],
-        outputs=[
-            compilation_status,
-            trace_id_state,
-            presentation_folder_state
-        ],
+        outputs=[compilation_status, trace_id_state, presentation_folder_state],
     )
 
     compilation_status.change(
@@ -555,14 +554,8 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
         outputs=pdf_output_viewer,
     ).then(
         fn=activate_preview,
-        inputs=[
-            browser_info,
-            presentation_folder_state
-        ],
-        outputs=[
-            pdf_output_viewer,
-            browser_alert_box
-        ],
+        inputs=[browser_info, presentation_folder_state],
+        outputs=[pdf_output_viewer, browser_alert_box],
     )
 
     # pdf_output.change(
