@@ -30,3 +30,20 @@ def replace_unicode_greek(text):
         text = text.replace(char, replacement)
 
     return text
+
+
+def escape_latex_special_chars(text):
+    """Escape selected LaTeX special characters.
+    Args:
+        text (str): Input text to escape.
+    Returns:
+        str: Text with LaTeX special characters escaped.
+    """
+    chars_map = {
+        '%': r'\%',
+    }
+
+    for char, replacement in chars_map.items():
+        text = text.replace(char, replacement)
+
+    return text

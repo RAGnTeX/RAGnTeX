@@ -6,7 +6,7 @@ from typing import Optional
 from langfuse.decorators import langfuse_context, observe
 
 from src.compilation import (compile_presentation, json_to_tex,
-                             replace_unicode_greek)
+                             replace_unicode_greek, escape_latex_special_chars)
 # from datetime import datetime
 from src.database import retrive_files_from_db
 from src.processing import create_output_folder, find_used_gfx
@@ -88,6 +88,7 @@ def generate_presentation(
         answer.text, config.theme, config.color_theme, config.aspect_ratio
     )
     latex_code = replace_unicode_greek(latex_code)
+    latex_code = escape_latex_special_chars(latex_code)
     compilation_status = compile_presentation(latex_code, work_dir)
 
     if compilation_status:

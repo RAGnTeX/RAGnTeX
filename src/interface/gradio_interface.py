@@ -192,7 +192,7 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
 
     uploaded_files_state = gr.State([])
     presentation_folder_state = gr.State("")
-    browser_info = gr.Textbox(visible=True, elem_id="browser_info")
+    browser_info = gr.Textbox(visible=False, elem_id="browser_info")
     browser_info.change(fn=lambda x: None, inputs=browser_info, outputs=[])
 
     # Page title and favicon (doesn't work? Gradio is really agressive)
@@ -512,6 +512,10 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
 
     trace_id_state = gr.State("")
     submit_topic_button.click(
+        fn=with_update_session(lambda x: ""),
+        inputs=session_id_state,
+        outputs=compilation_status,
+    ).then(
         fn=with_update_session(generate_presentation),
         inputs=[
             config_state,
@@ -538,7 +542,10 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
     ).then(
         fn=activate_preview,
         inputs=browser_info,
-        outputs=[pdf_output_viewer,browser_alert_box],
+        outputs=[
+            pdf_output_viewer,
+            browser_alert_box
+        ],
     )
 
     # pdf_output.change(
