@@ -3,6 +3,7 @@
 activate_poetry.sh
 run_docker.sh
 tmp/*
+static/*
 uploaded_docs/*
 .ruff_cache/*
 .mypy_cache/*

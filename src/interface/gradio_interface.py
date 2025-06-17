@@ -4,6 +4,7 @@
 import base64
 
 import gradio as gr
+from gradio_pdf import PDF
 
 from ..generator import generate_presentation
 from ..telemetry import submit_feedback
@@ -31,8 +32,7 @@ def update_config(key, value, config) -> dict:
 
 
 def upload_and_update_list(
-    files: list, uploaded_list, session_id
-) -> tuple[str, list[str]]:
+    files: list, uploaded_list, session_id) -> tuple[str, list[str]]:
     """Helper function to handle uploaded documents and update the list of uploaded files.
     Args:
         files (list): List of file-like objects to be uploaded.
@@ -49,28 +49,37 @@ def upload_and_update_list(
     return status, updated_list
 
 
-def generate_iframe(folder_path) -> str:
-    """Generate an HTML iframe to display the PDF presentation.
+# def generate_iframe(folder_path) -> str:
+#     """Generate an HTML iframe to display the PDF presentation.
+#     Args:
+#         folder_path (str): Path to the folder containing the generated PDF presentation.
+#     Returns:
+#         str: HTML string containing the iframe to display the PDF.
+#     """
+
+#     file_path = f"{folder_path}/presentation.pdf"
+#     if not file_path:
+#         return ""
+#     with open(file_path, "rb") as f:
+#         base64_pdf = base64.b64encode(f.read()).decode("utf-8")
+#     pdf_display = f"""
+#         <div style="position:relative; width:100%; padding-top:76.5%;">
+#         <iframe src="data:application/pdf;base64,{base64_pdf}#view=FitH"
+#         style="position:absolute; top:0; left:0; width:100%; height:100%; border:none;">
+#         </iframe></div>
+#     """
+
+def activate_preview(browser_info: str) -> tuple[gr.update, gr.update]:
+    """Activate the PDF preview in the viewer component.
     Args:
-        folder_path (str): Path to the folder containing the generated PDF presentation.
+        browser_info (gr.State): State containing information about the user's browser.
     Returns:
-        str: HTML string containing the iframe to display the PDF.
+        tuple[gr.Update, gr.Update]: Tuple containing updates for the PDF viewer and alert box visibility.
     """
-
-    file_path = f"{folder_path}/presentation.pdf"
-    print(f"Generating iframe for PDF at: {file_path}")
-    if not file_path:
-        return ""
-    with open(file_path, "rb") as f:
-        base64_pdf = base64.b64encode(f.read()).decode("utf-8")
-    pdf_display = f"""
-        <div style="position:relative; width:100%; padding-top:76.5%;">
-        <iframe src="data:application/pdf;base64,{base64_pdf}#view=FitH"
-        style="position:absolute; top:0; left:0; width:100%; height:100%; border:none;">
-        </iframe></div>
-    """
-
-    return pdf_display
+    if "safari" in browser_info.lower() and "chrome" not in browser_info.lower():
+        return gr.update(visible=False), gr.update(visible=True)
+    else:
+        return gr.update(visible=True), gr.update(visible=False)
 
 
 def encode_image(image_path) -> str:
@@ -119,6 +128,7 @@ JS_FUNC = r"""
         window.location.href = url.href;
     }
 
+    // Overlay for session expiration
     const overlayDiv = document.createElement("div");
     overlayDiv.id = "session-overlay";
     overlayDiv.style = `
@@ -154,6 +164,15 @@ JS_FUNC = r"""
         }
     }, 5000);
 
+    const browser = navigator.userAgent.toLowerCase();
+    const browser_element = document.querySelector('#browser_info textarea');
+    if (browser_element) {
+        browser_element.value = browser;
+        setTimeout(() => {
+            browser_element.dispatchEvent(new Event("input", { bubbles: true }));
+            browser_element.dispatchEvent(new Event("change", { bubbles: true }));
+        }, 1000);
+    }
     }
 """
 
@@ -173,6 +192,8 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
 
     uploaded_files_state = gr.State([])
     presentation_folder_state = gr.State("")
+    browser_info = gr.Textbox(visible=True, elem_id="browser_info")
+    browser_info.change(fn=lambda x: None, inputs=browser_info, outputs=[])
 
     # Page title and favicon (doesn't work? Gradio is really agressive)
     gr.HTML(
@@ -194,7 +215,7 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
         visible=False,
     )
 
-    # Mess with the download-box
+    # Mess with the download-box and preview-box
     gr.HTML(
         """
         <style>
@@ -245,7 +266,7 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
                             font-weight: 600;
                             font-size: 16px;
                             line-height: 1;
-                            border-radius: 0px;
+                            border-radius: 8px;
                             text-decoration: none;
                             gap: 8px;
                             transition: background-color 0.2s ease-in-out;
@@ -391,11 +412,30 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
 
             gr.Markdown("## 🎉 Final Presentation")
             pdf_output = gr.File(
-                label="Download/View Presentation",
+                label="Download Presentation",
                 interactive=False,
                 elem_id="download-box",
             )
-            pdf_output_viewer = gr.HTML(label="Presentation Preview")
+            pdf_output_viewer = PDF(label="Presentation Preview", elem_id="preview-box", visible=False)
+            browser_alert_box = gr.HTML(
+                """
+                <div style="
+                    border: 1px solid #ddd6fe;
+                    background-color: #ffffff;
+                    color: #181e44;
+                    padding: 15px;
+                    border-radius: 4px;
+                    font-weight: bold;
+                    max-width: 100%;
+                    margin: 0px;
+                    text-align: center;
+                ">
+                    ⚠️ PDF preview is unavailable in Safari. Please download the PDF to view it.
+                </div>
+                """,
+                visible=False,
+            )
+            # pdf_output_viewer = gr.HTML(label="Presentation Preview")
             trace_id_state = gr.State("")
 
     gr.Markdown("<br>")
@@ -489,11 +529,23 @@ with gr.Blocks(theme=theme, js=JS_FUNC) as demo:
         outputs=pdf_output,
     )
 
+    browser_info.change(fn=lambda x: None, inputs=browser_info, outputs=[])
+
     pdf_output.change(
-        fn=generate_iframe,
+        fn=lambda folder: f"{folder}/presentation.pdf",
         inputs=presentation_folder_state,
         outputs=pdf_output_viewer,
+    ).then(
+        fn=activate_preview,
+        inputs=browser_info,
+        outputs=[pdf_output_viewer,browser_alert_box],
     )
+
+    # pdf_output.change(
+    #     fn=generate_iframe,
+    #     inputs=presentation_folder_state,
+    #     outputs=pdf_output_viewer,
+    # )
 
     submit_feedback_button.click(
         fn=with_update_session(submit_feedback),

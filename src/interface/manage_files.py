@@ -82,10 +82,19 @@ def download_files(folder_path, session_id) -> str:
     zip_path = Path.cwd() / "tmp" / session_id / "presentation.zip"
 
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
-        for file in folder.rglob("*"):
-            if file.is_file() and file != zip_path:
-                arcname = Path("presentation") / file.relative_to(folder)
-                zipf.write(file, arcname=arcname)
+        # Add gfx folder
+        gfx_folder = folder / "gfx"
+        if gfx_folder.exists() and gfx_folder.is_dir():
+            for file in gfx_folder.rglob("*"):
+                if file.is_file():
+                    arcname = Path("presentation") / file.relative_to(folder)
+                    zipf.write(file, arcname=arcname)
+        # Add tex and pdf files
+        for filename in ["presentation.tex", "presentation.pdf"]:
+            file_path = folder / filename
+            if file_path.exists() and file_path.is_file():
+                arcname = Path("presentation") / filename
+                zipf.write(file_path, arcname=arcname)
     LOGGER.info("📦 Created zip archive at %s", zip_path)
 
     return str(zip_path)
