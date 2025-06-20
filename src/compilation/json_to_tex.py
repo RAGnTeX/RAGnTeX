@@ -2,6 +2,8 @@
 
 import json
 
+import latexcodec
+
 
 def render_content(content: list[str], content_format: str) -> str:
     """Render content in LaTeX format depending is it si itemized list or plain text.
@@ -14,10 +16,14 @@ def render_content(content: list[str], content_format: str) -> str:
     # Remove blank or whitespace-only entries
     filtered_content = [c.strip() for c in content if c.strip()]
     if content_format == "text":
-        return "\n\n".join(filtered_content)
+        encoded_items = [c.encode("latex").decode("ascii") for c in filtered_content]
+        return "\n\n".join(encoded_items)
+        # return "\n\n".join(filtered_content.encode("latex").decode("ascii"))
     return (
         "\\begin{itemize}\n"
-        + "\n".join(f"\\item {c}" for c in filtered_content)
+        + "\n".join(
+            f"\\item {c.encode('latex').decode('ascii')}" for c in filtered_content
+        )
         + "\n\\end{itemize}"
     )
 
