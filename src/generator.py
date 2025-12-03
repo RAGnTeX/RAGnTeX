@@ -2,15 +2,26 @@
 
 from dataclasses import dataclass
 from typing import Optional
+import json
 
 from langfuse.decorators import langfuse_context, observe
 
-from src.compilation import (compile_presentation, escape_latex_special_chars,
-                             json_to_tex, replace_unicode_greek)
+from src.compilation import (
+    compile_presentation,
+    escape_latex_special_chars,
+    json_to_tex,
+    replace_unicode_greek,
+)
+
 # from datetime import datetime
 from src.database import retrive_files_from_db
 from src.processing import create_output_folder, find_used_gfx
-from src.services import build_prompt, client, generate_with_retry
+from src.services import (
+    build_prompt,
+    client,
+    generate_with_retry,
+    generate_slides_with_nanobanana,
+)
 from src.telemetry import Logger
 
 LOGGER = Logger.get_logger()
@@ -92,9 +103,12 @@ def generate_presentation(
     latex_code = json_to_tex(
         answer.text, config.theme, config.color_theme, config.aspect_ratio
     )
-    latex_code = replace_unicode_greek(latex_code)
-    latex_code = escape_latex_special_chars(latex_code)
-    compilation_status = compile_presentation(latex_code, work_dir)
+    # latex_code = replace_unicode_greek(latex_code)
+    # latex_code = escape_latex_special_chars(latex_code)
+    # compilation_status = compile_presentation(latex_code, work_dir)
+    compilation_status = generate_slides_with_nanobanana(
+        json.loads(answer.text), work_dir
+    )
 
     if compilation_status:
         return compilation_status, trace_id, work_dir
